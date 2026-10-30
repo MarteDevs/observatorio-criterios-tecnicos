@@ -6,6 +6,12 @@ var SHEET_CATALOGOS = "catalogos";
 var SHEET_CONFIG = "config";
 var SHEET_LOG = "log_cambios";
 
+// Completa aquí los correos de las 2-3 personas administradoras designadas
+// (RF-02). "Checklist > Configurar protecciones y validaciones" les da
+// permiso de edición sobre el rango de datos de `criterios`; nadie fuera de
+// esta lista (ni siquiera con acceso de Editor al archivo) puede tocarlo.
+var ADMIN_EMAILS = [];
+
 // Mismo orden de columnas que data-export/sheets/criterios.csv
 var CRITERIOS_HEADERS = [
   "codigo", "sector", "servicio", "tipologia", "componente", "item", "criterio",
@@ -151,12 +157,32 @@ function configurarProteccionesYValidaciones() {
 
   // 1) Encabezado protegido: todos pueden ver, nadie más que el propietario edita.
   var headerRange = criterios.getRange(1, 1, 1, H.length);
-  var existingProtections = criterios.getProtections(SpreadsheetApp.ProtectionType.RANGE);
-  existingProtections.forEach(function (p) {
-    if (p.getRange().getRow() === 1 && p.getRange().getNumRows() === 1) p.remove();
-  });
+  clearRangeProtections_(criterios, 1, 1);
   var headerProtection = headerRange.protect().setDescription("Encabezado de criterios (no editar)");
   headerProtection.removeEditors(headerProtection.getEditors());
+
+  // 1b) Rango de datos (fila 2 en adelante): solo ADMIN_EMAILS puede editar,
+  // nadie más aunque tenga acceso de Editor al archivo (RF-02).
+  clearRangeProtections_(criterios, 2, lastRow - 1);
+  var dataProtection = criterios
+    .getRange(2, 1, lastRow - 1, H.length)
+    .protect()
+    .setDescription("Rango de datos de criterios (solo administradores)");
+  dataProtection.removeEditors(dataProtection.getEditors());
+  if (ADMIN_EMAILS.length > 0) dataProtection.addEditors(ADMIN_EMAILS);
+
+  // 1c) Catálogos, config y el log de cambios no se editan a mano: el script
+  // sí puede escribir en ellos (las protecciones de Sheets no bloquean las
+  // llamadas de Apps Script, solo la edición manual desde la interfaz).
+  [SHEET_CATALOGOS, SHEET_CONFIG, SHEET_LOG].forEach(function (name) {
+    var sheet = ss.getSheetByName(name);
+    if (!sheet) return;
+    var existing = sheet.getProtections(SpreadsheetApp.ProtectionType.SHEET);
+    existing.forEach(function (p) { p.remove(); });
+    var protection = sheet.protect().setDescription(name + " (editar solo desde el menú Checklist o con cuidado)");
+    protection.removeEditors(protection.getEditors());
+    if (ADMIN_EMAILS.length > 0) protection.addEditors(ADMIN_EMAILS);
+  });
 
   // 2) Listas desplegables en las columnas controladas, leyendo de `catalogos`.
   var catalogosRange = catalogos.getDataRange();
@@ -210,8 +236,22 @@ function configurarProteccionesYValidaciones() {
   criterios.setConditionalFormatRules(rules);
 
   SpreadsheetApp.getUi().alert(
-    "Listo: encabezado protegido y listas desplegables configuradas. " +
-      "Agrega manualmente como editores del rango de datos (fila 2 en adelante) " +
-      "a las 2-3 personas administradoras designadas (Protección > Compartir acceso)."
+    ADMIN_EMAILS.length > 0
+      ? "Listo: encabezado y pestañas auxiliares protegidos; " +
+          ADMIN_EMAILS.length +
+          " administrador(es) pueden editar el rango de datos de criterios."
+      : "Listo: encabezado y pestañas auxiliares protegidos. ADVERTENCIA: ADMIN_EMAILS está vacío " +
+          "en Code.gs, así que por ahora NADIE (ni siquiera los administradores) puede editar el rango " +
+          "de datos salvo el propietario del archivo. Completa ADMIN_EMAILS y vuelve a ejecutar esta función."
   );
+}
+
+/** Quita protecciones de rango previas que se solapen con [startRow, startRow+numRows). */
+function clearRangeProtections_(sheet, startRow, numRows) {
+  var endRow = startRow + numRows - 1;
+  sheet.getProtections(SpreadsheetApp.ProtectionType.RANGE).forEach(function (p) {
+    var r = p.getRange();
+    var rEnd = r.getRow() + r.getNumRows() - 1;
+    if (r.getRow() <= endRow && rEnd >= startRow) p.remove();
+  });
 }

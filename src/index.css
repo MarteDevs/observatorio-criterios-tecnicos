@@ -19,6 +19,7 @@
   --dif-bg: #fbf4e4;
   --dif-line: #c98a12;
   --font: "Public Sans", "Helvetica Neue", -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  --font-serif: "Source Serif 4", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
@@ -86,6 +87,11 @@ body {
 :focus-visible {
   outline: 2px solid #4a7fc1;
   outline-offset: 2px;
+}
+
+.font-display {
+  font-family: var(--font-serif);
+  font-feature-settings: "ss01" 1;
 }
 
 /* Custom scrollbars for data tables */

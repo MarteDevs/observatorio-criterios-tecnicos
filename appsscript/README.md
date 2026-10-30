@@ -14,16 +14,18 @@ dentro del propio Google Sheet que ya tiene las 4 pestañas generadas por
    con la cuenta de la institución: `clasp login`.
 4. Copiar `.clasp.json.example` a `.clasp.json` dentro de esta carpeta y pegar
    el Script ID del paso 2.
-5. `clasp push` desde esta carpeta (`appsscript/`) para subir `Code.gs`,
+5. Antes de subir el código, editar `Code.gs` y completar `ADMIN_EMAILS` con
+   los correos de las 2-3 personas administradoras designadas (RF-02). Sin
+   esto, el paso 7 deja el rango de datos sin ningún editor más que el
+   propietario del archivo.
+6. `clasp push` desde esta carpeta (`appsscript/`) para subir `Code.gs`,
    `Sidebar.html` y `appsscript.json`.
-6. Recargar el Sheet. Aparece el menú **Checklist** en la barra superior.
-7. Ejecutar **Checklist > Configurar protecciones y validaciones** una vez
+7. Recargar el Sheet. Aparece el menú **Checklist** en la barra superior.
+8. Ejecutar **Checklist > Configurar protecciones y validaciones** una vez
    (autoriza los permisos que pida Google la primera vez). Esto protege el
-   encabezado de `criterios` y agrega las listas desplegables desde
-   `catalogos`.
-8. En Datos > Vistas y rangos protegidos, agregar como editoras del rango de
-   datos de `criterios` (fila 2 en adelante) a las 2-3 personas
-   administradoras designadas.
+   encabezado y el rango de datos de `criterios` (solo editable por
+   `ADMIN_EMAILS`), bloquea `catalogos`/`config`/`log_cambios` para edición
+   manual, y agrega las listas desplegables desde `catalogos`.
 9. Archivo > Compartir > Publicar en la Web, publicar solo la pestaña
    `criterios` como CSV, y pegar esa URL en `VITE_CRITERIOS_CSV_URL`
    (`.env.local` del proyecto web).
@@ -44,4 +46,5 @@ dentro del propio Google Sheet que ya tiene las 4 pestañas generadas por
 No reemplaza a AppSheet si la institución ya lo tiene disponible (Niveles 1
 o 2 del SDD) — es la alternativa cuando AppSheet no es viable. Las
 protecciones de rango deben revisarse después de cualquier cambio grande de
-columnas en `criterios` (volver a correr el paso 7).
+columnas en `criterios`, o cuando cambie la lista de administradores (editar
+`ADMIN_EMAILS` y volver a correr el paso 8).

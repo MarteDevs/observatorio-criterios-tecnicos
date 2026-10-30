@@ -7,7 +7,7 @@ import {
   type Criterion,
   type ServiceDefinition
 } from "./data/criteriaData";
-import { SPONSORS, UP_CREST_SVG } from "./data/logos";
+import { SPONSORS } from "./data/logos";
 import {
   normStr,
   mapHeaderToField,
@@ -76,6 +76,18 @@ export default function App() {
   const [uploadNote, setUploadNote] = useState<string | null>(null);
   const [selectedCriterion, setSelectedCriterion] = useState<Criterion | null>(null);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Accesibilidad del modal de detalle: cierre con Escape y foco inicial en el panel.
+  useEffect(() => {
+    if (!selectedCriterion) return;
+    modalRef.current?.focus();
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelectedCriterion(null);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [selectedCriterion]);
 
   // Live data source (RF-01/RF-04/RF-17, RNF-08): Google Sheets publicado > caché local > datos de ejemplo
   const [dataSource, setDataSource] = useState<DataSource | "loading">("loading");
@@ -137,49 +149,6 @@ export default function App() {
   // Calendar filter state
   const [calendarFilter, setCalendarFilter] = useState<"all" | "confirmed" | "pending">("all");
 
-  // Custom uploaded logos state (saved in localStorage for permanent 1:1 image display)
-  const [customLogos, setCustomLogos] = useState<Record<string, string>>(() => {
-    try {
-      const saved = localStorage.getItem("app_custom_logos");
-      const parsed = saved ? JSON.parse(saved) : {};
-      if (parsed.inviertelab) {
-        delete parsed.inviertelab;
-        localStorage.setItem("app_custom_logos", JSON.stringify(parsed));
-      }
-      return parsed;
-    } catch {
-      return {};
-    }
-  });
-  const [organizaCardBg, setOrganizaCardBg] = useState<"white" | "dark">(() => {
-    return (localStorage.getItem("organiza_card_bg") as "white" | "dark") || "white";
-  });
-  const [logoModalOpen, setLogoModalOpen] = useState(false);
-
-  const handleUploadLogo = (key: string, file: File) => {
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const dataUrl = e.target?.result as string;
-      if (dataUrl) {
-        setCustomLogos((prev) => {
-          const next = { ...prev, [key]: dataUrl };
-          try {
-            localStorage.setItem("app_custom_logos", JSON.stringify(next));
-          } catch {
-            // storage quota fallback
-          }
-          return next;
-        });
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleResetLogos = () => {
-    setCustomLogos({});
-    localStorage.removeItem("app_custom_logos");
-  };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -518,12 +487,16 @@ export default function App() {
           <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-start">
               <div className="lg:col-span-8">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-semibold rounded-sm mb-4">
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#1a2332] dark:text-blue-300 pb-3 mb-5 border-b border-slate-200 dark:border-slate-800">
                   <span>Inversión Pública Subnacional</span>
-                  <span>·</span>
-                  <span>Directiva DGPMI - MEF & Ley N° 32069</span>
+                  <span className="text-slate-300 dark:text-slate-600" aria-hidden="true">
+                    ·
+                  </span>
+                  <span className="font-medium normal-case tracking-normal text-slate-500 dark:text-slate-400">
+                    Directiva DGPMI – MEF · Ley N.° 32069
+                  </span>
                 </div>
-                <h1 className="text-3xl sm:text-4xl lg:text-[42px] font-bold text-slate-900 dark:text-slate-100 leading-[1.18] tracking-tight mb-5">
+                <h1 className="font-display text-3xl sm:text-4xl lg:text-[44px] font-semibold text-slate-900 dark:text-slate-100 leading-[1.15] tracking-tight mb-5 text-balance">
                   Observatorio de Criterios Técnicos para Expedientes Técnicos Subnacionales
                 </h1>
                 <p className="text-lg text-slate-600 dark:text-slate-400 max-w-[65ch] leading-relaxed mb-7">
@@ -531,8 +504,8 @@ export default function App() {
                 </p>
 
                 {/* Academic Stamp */}
-                <div className="border-l-4 border-[#1a2332] dark:border-blue-400 bg-slate-50 dark:bg-[#18202b] p-5 rounded-r-sm">
-                  <strong className="block text-slate-900 dark:text-slate-100 text-base font-semibold mb-2">
+                <div className="border-l-4 border-[#1a2332] dark:border-blue-400 bg-slate-50 dark:bg-[#18202b] p-5 rounded-r">
+                  <strong className="font-display italic block text-slate-900 dark:text-slate-100 text-lg font-medium mb-2">
                     Carácter académico del ejercicio
                   </strong>
                   <p className="text-slate-700 dark:text-slate-300 text-sm leading-relaxed mb-3">
@@ -548,7 +521,7 @@ export default function App() {
               </div>
 
               {/* Aside: Quick Index of Typologies */}
-              <aside className="lg:col-span-4 bg-slate-50/70 dark:bg-[#18202b]/70 border-t-3 border-[#1a2332] dark:border-blue-400 p-5 rounded-b-sm">
+              <aside className="lg:col-span-4 bg-slate-50/70 dark:bg-[#18202b]/70 border-t-3 border-[#1a2332] dark:border-blue-400 p-5 rounded-b">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-xs uppercase font-bold tracking-wider text-slate-500 dark:text-slate-400">
                     Tipologías sistematizadas
@@ -596,34 +569,11 @@ export default function App() {
                     <h3 className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                       Organiza
                     </h3>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const next = organizaCardBg === "white" ? "dark" : "white";
-                        setOrganizaCardBg(next);
-                        localStorage.setItem("organiza_card_bg", next);
-                      }}
-                      className="text-[10.5px] text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 transition-colors font-medium bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700 cursor-pointer"
-                      title="Alternar fondo de la tarjeta Organiza"
-                    >
-                      {organizaCardBg === "white" ? "Probar fondo azul UP" : "Volver a fondo blanco"}
-                    </button>
                   </div>
-                  <div
-                    className={`relative group rounded p-2.5 h-[92px] flex items-center justify-center shadow-xs overflow-hidden transition-colors ${
-                      organizaCardBg === "dark"
-                        ? "bg-[#1a2332] border border-[#2d3748]"
-                        : "bg-white border border-slate-200"
-                    }`}
-                  >
+                  <div className="relative rounded p-2.5 h-[92px] flex items-center justify-center shadow-xs overflow-hidden bg-white border border-slate-200">
                     <div className="w-full h-full flex items-center justify-center p-1">
                       <img
-                        src={
-                          customLogos["pacifico"] ||
-                          (organizaCardBg === "dark"
-                            ? "/logos/pacifico-egp-up.png"
-                            : "/logos/pacifico-egp-up-dark.png")
-                        }
+                        src="/logos/pacifico-egp-up-dark.png"
                         alt="Universidad del Pacífico"
                         className="max-h-[66px] max-w-full object-contain mx-auto"
                       />
@@ -647,7 +597,7 @@ export default function App() {
                         title={sp.name}
                       >
                         <img
-                          src={customLogos[sp.id] || sp.imageSrc || `/logos/${sp.id}.png`}
+                          src={sp.imageSrc || `/logos/${sp.id}.png`}
                           alt={sp.name}
                           className="max-h-[62px] max-w-full object-contain mx-auto"
                         />
@@ -676,7 +626,7 @@ export default function App() {
           <div className="max-w-[1240px] mx-auto px-4 sm:px-6 py-10 lg:py-14">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
               <div className="space-y-3">
-                <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <h3 className="font-display text-lg font-medium text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <CheckCircle2 size={18} className="text-emerald-600 dark:text-emerald-400" />
                   Qué es este ejercicio
                 </h3>
@@ -688,7 +638,7 @@ export default function App() {
               </div>
 
               <div className="space-y-3">
-                <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <h3 className="font-display text-lg font-medium text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <XCircle size={18} className="text-rose-600 dark:text-rose-400" />
                   Qué no es
                 </h3>
@@ -700,7 +650,7 @@ export default function App() {
               </div>
 
               <div className="space-y-3">
-                <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <h3 className="font-display text-lg font-medium text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <Info size={18} className="text-blue-600 dark:text-blue-400" />
                   Regla de trabajo de las mesas
                 </h3>
@@ -710,7 +660,7 @@ export default function App() {
               </div>
 
               <div className="space-y-3">
-                <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                <h3 className="font-display text-lg font-medium text-slate-900 dark:text-slate-100 flex items-center gap-2">
                   <Building2 size={18} className="text-amber-600 dark:text-amber-400" />
                   Fuentes normativas
                 </h3>
@@ -742,7 +692,7 @@ export default function App() {
             <div className="flex items-center gap-3 mb-6">
               <Layers className="text-slate-700 dark:text-slate-300" size={24} />
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
+                <h2 className="font-display text-2xl sm:text-[28px] font-semibold text-slate-900 dark:text-slate-100">
                   Explorador de Criterios Técnicos
                 </h2>
                 <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
@@ -794,7 +744,7 @@ export default function App() {
             </div>
 
             {/* Controls Bar */}
-            <div className="bg-white dark:bg-slate-800 p-4 border border-slate-200 dark:border-slate-700 rounded-sm shadow-xs space-y-3 mb-4">
+            <div className="bg-white dark:bg-slate-800 p-4 border border-slate-200 dark:border-slate-700 rounded shadow-xs space-y-3 mb-4">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 {/* Search Input */}
                 <div className="flex-1 min-w-[260px] relative">
@@ -807,6 +757,7 @@ export default function App() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Buscar por criterio, norma, artículo o palabra clave..."
+                    aria-label="Buscar criterios técnicos"
                     className="w-full pl-9 pr-8 py-2 text-sm bg-slate-50 dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded focus:bg-white dark:focus:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400"
                   />
                   {searchQuery && (
@@ -1026,7 +977,16 @@ export default function App() {
                               )}
                               <tr
                                 onClick={() => setSelectedCriterion(r)}
-                                className={`transition-colors cursor-pointer group ${
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
+                                    setSelectedCriterion(r);
+                                  }
+                                }}
+                                tabIndex={0}
+                                role="button"
+                                aria-label={`Ver detalle de ${r.id}: ${r.item}`}
+                                className={`transition-colors cursor-pointer group focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-blue-500 ${
                                   differential
                                     ? "bg-amber-50/70 dark:bg-amber-950/30 hover:bg-amber-100/70 dark:hover:bg-amber-950/50"
                                     : "hover:bg-slate-50 dark:hover:bg-slate-700/40"
@@ -1098,7 +1058,16 @@ export default function App() {
                     <article
                       key={r.id}
                       onClick={() => setSelectedCriterion(r)}
-                      className={`border rounded p-4 flex flex-col justify-between transition-shadow hover:shadow-md cursor-pointer ${
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          setSelectedCriterion(r);
+                        }
+                      }}
+                      tabIndex={0}
+                      role="button"
+                      aria-label={`Ver detalle de ${r.id}: ${r.item}`}
+                      className={`border rounded p-4 flex flex-col justify-between transition-shadow hover:shadow-md cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-500 ${
                         differential
                           ? "bg-amber-50/50 dark:bg-amber-950/20 border-amber-300 dark:border-amber-800/60 border-l-4 border-l-amber-500"
                           : "bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700"
@@ -1178,7 +1147,12 @@ export default function App() {
             onClick={() => setSelectedCriterion(null)}
           >
             <div
-              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto"
+              ref={modalRef}
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="criterion-modal-title"
+              tabIndex={-1}
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg max-w-2xl w-full p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto focus:outline-none"
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-start justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-3">
@@ -1196,7 +1170,7 @@ export default function App() {
                       </span>
                     )}
                   </div>
-                  <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+                  <h3 id="criterion-modal-title" className="text-lg font-bold text-slate-900 dark:text-slate-100">
                     {selectedCriterion.item}
                   </h3>
                 </div>
@@ -1303,7 +1277,7 @@ export default function App() {
           <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
             <div className="flex items-center gap-3 mb-2">
               <Building2 className="text-slate-700 dark:text-slate-300" size={22} />
-              <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
+              <h2 className="font-display text-2xl sm:text-[28px] font-semibold text-slate-900 dark:text-slate-100">
                 Entidades Convocadas
               </h2>
             </div>
@@ -1424,7 +1398,7 @@ export default function App() {
               <div className="flex items-center gap-3">
                 <Calendar className="text-slate-700 dark:text-slate-300" size={22} />
                 <div>
-                  <h2 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100">
+                  <h2 className="font-display text-2xl sm:text-[28px] font-semibold text-slate-900 dark:text-slate-100">
                     Calendario de Mesas Técnicas
                   </h2>
                   <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
@@ -1600,7 +1574,7 @@ export default function App() {
                     title={sp.name}
                   >
                     <img
-                      src={customLogos[sp.id] || sp.imageSrc || `/logos/${sp.id}.png`}
+                      src={sp.imageSrc || `/logos/${sp.id}.png`}
                       alt={sp.name}
                       className="max-h-[38px] max-w-full object-contain mx-auto"
                     />
@@ -1620,96 +1594,6 @@ export default function App() {
           </div>
         </div>
       </footer>
-      )}
-
-      {/* MODAL PARA SUBIR ARCHIVOS DE LOGOTIPOS OFICIALES */}
-      {logoModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs">
-          <div className="bg-white dark:bg-slate-900 rounded-lg shadow-2xl border border-slate-200 dark:border-slate-800 max-w-lg w-full p-6 animate-in fade-in duration-200">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-slate-800 mb-4">
-              <div className="flex items-center gap-2">
-                <Upload className="text-blue-600 dark:text-blue-400" size={20} />
-                <h3 className="font-bold text-base text-slate-900 dark:text-slate-100">
-                  Cargar imágenes originales de logotipos
-                </h3>
-              </div>
-              <button
-                type="button"
-                onClick={() => setLogoModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-600 dark:text-slate-400 mb-4 leading-relaxed">
-              Selecciona los archivos de imagen oficiales (<strong>.png</strong>, <strong>.jpg</strong> o <strong>.svg</strong>) de tu computadora. Se mostrarán <strong>exactamente como son</strong>, sin vectorizaciones ni alteraciones de píxeles o fuentes.
-            </p>
-
-            <div className="space-y-3">
-              {[
-                { id: "pacifico", name: "Universidad del Pacífico", role: "Organiza" },
-                { id: "bicentenario", name: "Instituto Bicentenario", role: "Con el apoyo de" },
-                { id: "gfp", name: "Programa GFP Subnacional", role: "Con el apoyo de" },
-                { id: "inviertelab", name: "InvierteLab", role: "Con el apoyo de" }
-              ].map((item) => (
-                <div
-                  key={item.id}
-                  className="flex items-center justify-between p-3 border border-slate-200 dark:border-slate-800 rounded bg-slate-50 dark:bg-slate-800/50"
-                >
-                  <div className="min-w-0 pr-3">
-                    <div className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
-                      {item.name}
-                    </div>
-                    <div className="text-[11px] text-slate-500">
-                      {item.role} {customLogos[item.id] ? "· ✓ Imagen cargada" : "· (Predeterminada)"}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 shrink-0">
-                    {customLogos[item.id] && (
-                      <img
-                        src={customLogos[item.id]}
-                        alt={item.name}
-                        className="h-8 w-16 object-contain bg-white rounded border border-slate-200 p-0.5"
-                      />
-                    )}
-                    <label className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded cursor-pointer transition-colors flex items-center gap-1.5 shadow-xs">
-                      <Upload size={12} />
-                      <span>{customLogos[item.id] ? "Cambiar PNG" : "Subir archivo PNG"}</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleUploadLogo(item.id, file);
-                        }}
-                      />
-                    </label>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <div className="mt-5 pt-3 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={handleResetLogos}
-                className="text-xs text-red-600 dark:text-red-400 hover:underline flex items-center gap-1"
-              >
-                <RotateCcw size={12} /> Restablecer originales
-              </button>
-              <button
-                type="button"
-                onClick={() => setLogoModalOpen(false)}
-                className="bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 text-xs font-semibold px-4 py-2 rounded hover:opacity-90 transition-opacity"
-              >
-                Cerrar y aplicar
-              </button>
-            </div>
-          </div>
-        </div>
       )}
     </div>
   );

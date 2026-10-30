@@ -1,0 +1,61 @@
+name: Publicar en GitHub Pages
+
+# Se dispara solo con un push a main. Nadie necesita compilar ni subir
+# archivos a mano: editar el Sheet actualiza el contenido solo (RNF-02);
+# este workflow solo corre cuando cambia el código del repositorio.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - run: bun install --frozen-lockfile
+
+      - name: Build de la página principal
+        run: bun run build
+        env:
+          VITE_CRITERIOS_CSV_URL: ${{ secrets.VITE_CRITERIOS_CSV_URL }}
+          # BASE_PATH: /nombre-del-repo/   (descomentar y ajustar si el sitio
+          # se publica como project page en vez de dominio propio o user page)
+
+      - name: Build del widget embebible
+        run: bun run build:widget
+        env:
+          VITE_CRITERIOS_CSV_URL: ${{ secrets.VITE_CRITERIOS_CSV_URL }}
+
+      - name: Unir el widget a la salida de la página
+        run: cp dist-widget/widget.js dist/widget.js
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

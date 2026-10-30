@@ -126,8 +126,19 @@ function seedResult(): RemoteCriteriaResult {
   return { data: INITIAL_DATA, source: "seed", fetchedAt: null, updatedAt: null };
 }
 
+// Si ya se leyó la fuente hace menos de esto, se reusa esa copia en vez de
+// volver a pedirla — reduce la carga sobre el CSV publicado sin importar de
+// dónde venga el tráfico, y de paso acelera cargas repetidas.
+const FRESH_WINDOW_MS = 3 * 60 * 1000;
+
 export async function fetchRemoteCriteria(): Promise<RemoteCriteriaResult> {
   if (!CSV_URL) return seedResult();
+
+  const cachedBeforeFetch = readCache();
+  if (cachedBeforeFetch && Date.now() - new Date(cachedBeforeFetch.fetchedAt).getTime() < FRESH_WINDOW_MS) {
+    const { data, maxUpdatedAt } = rowsToCriteriaMap(parseCsv(cachedBeforeFetch.csv));
+    return { data, source: "remote", fetchedAt: cachedBeforeFetch.fetchedAt, updatedAt: maxUpdatedAt };
+  }
 
   try {
     const res = await fetch(CSV_URL, { cache: "no-store" });
