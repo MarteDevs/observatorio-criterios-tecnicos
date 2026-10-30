@@ -16,6 +16,7 @@ import {
   buildCriterionFromFields
 } from "./data/normalize";
 import { fetchRemoteCriteria, type DataSource } from "./data/remoteCriteria";
+import { fetchRemoteServices, type ServicesSource } from "./data/remoteServices";
 import {
   Search,
   Filter,
@@ -96,13 +97,23 @@ export default function App() {
   const [dataFetchedAt, setDataFetchedAt] = useState<string | null>(null);
   const [dataUpdatedAt, setDataUpdatedAt] = useState<string | null>(null);
 
+  // Pestañas de tipología: se intentan armar solas desde catalogos (si la
+  // fuente configurada es el endpoint JSON de Apps Script); si no se puede
+  // confirmar en vivo, se avisa de forma visible y se usa la lista fija.
+  const [services, setServices] = useState<ServiceDefinition[]>(SERVICES);
+  const [servicesSource, setServicesSource] = useState<ServicesSource | "loading">("loading");
+
   const loadRemoteData = (onDone?: (source: DataSource) => void) => {
-    fetchRemoteCriteria().then((result) => {
-      setCriteriaData(result.data);
-      setDataSource(result.source);
-      setDataFetchedAt(result.fetchedAt);
-      setDataUpdatedAt(result.updatedAt);
-      onDone?.(result.source);
+    fetchRemoteServices().then((servicesResult) => {
+      setServices(servicesResult.services);
+      setServicesSource(servicesResult.source);
+      fetchRemoteCriteria(servicesResult.services).then((result) => {
+        setCriteriaData(result.data);
+        setDataSource(result.source);
+        setDataFetchedAt(result.fetchedAt);
+        setDataUpdatedAt(result.updatedAt);
+        onDone?.(result.source);
+      });
     });
   };
 
@@ -117,15 +128,15 @@ export default function App() {
     const sector = new URLSearchParams(window.location.search).get("sector");
     if (!sector) return;
     setSectorFilter(sector);
-    const match = SERVICES.find((s) => normStr(s.sector).includes(normStr(sector)));
+    const match = services.find((s) => normStr(s.sector).includes(normStr(sector)));
     if (match) setActiveSvc(match.key);
-  }, []);
+  }, [services]);
 
   const visibleServices = useMemo(() => {
-    if (!sectorFilter) return SERVICES;
-    const matches = SERVICES.filter((s) => normStr(s.sector).includes(normStr(sectorFilter)));
-    return matches.length > 0 ? matches : SERVICES;
-  }, [sectorFilter]);
+    if (!sectorFilter) return services;
+    const matches = services.filter((s) => normStr(s.sector).includes(normStr(sectorFilter)));
+    return matches.length > 0 ? matches : services;
+  }, [services, sectorFilter]);
 
   // RF-06/RF-09: modo de inserción sin encabezado (?embed=1), para usar dentro de un <iframe>.
   const [isEmbed] = useState<boolean>(() => {
@@ -203,13 +214,13 @@ export default function App() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const currentService = useMemo<ServiceDefinition>(() => {
-    return SERVICES.find((s) => s.key === activeSvc) || SERVICES[0];
-  }, [activeSvc]);
+    return services.find((s) => s.key === activeSvc) || services[0] || SERVICES[0];
+  }, [services, activeSvc]);
 
   const pairedService = useMemo<ServiceDefinition | undefined>(() => {
     if (!currentService.par) return undefined;
-    return SERVICES.find((s) => s.key === currentService.par);
-  }, [currentService]);
+    return services.find((s) => s.key === currentService.par);
+  }, [services, currentService]);
 
   // Filtered criteria
   const currentCriteriaList = useMemo(() => {
@@ -341,7 +352,7 @@ export default function App() {
   const handleDownloadExcel = () => {
     try {
       const wb = XLSX.utils.book_new();
-      SERVICES.forEach((svc) => {
+      services.forEach((svc) => {
         const rows = criteriaData[svc.key] || [];
         const exportData = rows.map((r) => ({
           ID: r.id,
@@ -962,6 +973,16 @@ export default function App() {
                 <Info size={15} className="shrink-0" />
                 <span>
                   Mostrando datos de ejemplo del observatorio. La conexión a la fuente en vivo (Google Sheets) aún no está configurada.
+                </span>
+              </div>
+            )}
+
+            {/* Aviso visible (no silencioso) si no se pudo confirmar en vivo la lista de tipologías */}
+            {servicesSource === "error" && (
+              <div className="bg-rose-50 dark:bg-rose-950/60 border border-rose-300 dark:border-rose-800 text-rose-900 dark:text-rose-200 px-4 py-2.5 rounded text-xs flex items-center gap-2.5 mb-4 font-medium">
+                <AlertCircle size={15} className="shrink-0" />
+                <span>
+                  No se pudo confirmar en vivo la lista de tipologías desde `catalogos`. Mostrando la lista fija como respaldo — puede estar desactualizada si se agregó una tipología nueva recientemente.
                 </span>
               </div>
             )}

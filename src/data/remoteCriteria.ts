@@ -3,7 +3,7 @@
 // el JSON del endpoint opcional de Apps Script (ver appsscript/README.md) —,
 // con caché local y retorno a los datos de ejemplo si la fuente en vivo no
 // está configurada o no responde.
-import { SERVICES, INITIAL_DATA, type Criterion } from "./criteriaData";
+import { SERVICES, INITIAL_DATA, type Criterion, type ServiceDefinition } from "./criteriaData";
 import { normStr, mapHeaderToField, buildCriterionFromFields, type CriterionFieldKey } from "./normalize";
 
 const CACHE_KEY = "app_remote_criterios_cache_v1";
@@ -69,7 +69,7 @@ export function parseCsv(text: string): string[][] {
  * de Apps Script (doGet) — mismo VITE_CRITERIOS_CSV_URL sirve para los dos,
  * detectado por la forma del texto de respuesta.
  */
-function toRows(text: string): string[][] {
+export function toRows(text: string): string[][] {
   const trimmed = text.trim();
   if (trimmed.startsWith("[")) {
     const json = JSON.parse(trimmed) as Record<string, unknown>[];
@@ -80,12 +80,15 @@ function toRows(text: string): string[][] {
   return parseCsv(text);
 }
 
-function rowsToCriteriaMap(rows: string[][]): {
+function rowsToCriteriaMap(
+  rows: string[][],
+  services: ServiceDefinition[]
+): {
   data: Record<string, Criterion[]>;
   maxUpdatedAt: string | null;
 } {
   const buckets: Record<string, Criterion[]> = {};
-  for (const svc of SERVICES) buckets[svc.key] = [];
+  for (const svc of services) buckets[svc.key] = [];
   if (rows.length < 2) return { data: buckets, maxUpdatedAt: null };
 
   const headers = rows[0].map((h) => mapHeaderToField(h));
@@ -112,10 +115,10 @@ function rowsToCriteriaMap(rows: string[][]): {
     const sector = normStr(obj.sector || "");
 
     if (servicio === "all" || sector === "transversal") {
-      for (const svc of SERVICES) buckets[svc.key].push(criterion);
+      for (const svc of services) buckets[svc.key].push(criterion);
       continue;
     }
-    const target = SERVICES.find((s) => normStr(s.key) === servicio);
+    const target = services.find((s) => normStr(s.key) === servicio);
     if (target) buckets[target.key].push(criterion);
   }
 
@@ -149,12 +152,12 @@ function seedResult(): RemoteCriteriaResult {
 // dónde venga el tráfico, y de paso acelera cargas repetidas.
 const FRESH_WINDOW_MS = 3 * 60 * 1000;
 
-export async function fetchRemoteCriteria(): Promise<RemoteCriteriaResult> {
+export async function fetchRemoteCriteria(services: ServiceDefinition[] = SERVICES): Promise<RemoteCriteriaResult> {
   if (!CSV_URL) return seedResult();
 
   const cachedBeforeFetch = readCache();
   if (cachedBeforeFetch && Date.now() - new Date(cachedBeforeFetch.fetchedAt).getTime() < FRESH_WINDOW_MS) {
-    const { data, maxUpdatedAt } = rowsToCriteriaMap(toRows(cachedBeforeFetch.raw));
+    const { data, maxUpdatedAt } = rowsToCriteriaMap(toRows(cachedBeforeFetch.raw), services);
     return { data, source: "remote", fetchedAt: cachedBeforeFetch.fetchedAt, updatedAt: maxUpdatedAt };
   }
 
@@ -162,14 +165,14 @@ export async function fetchRemoteCriteria(): Promise<RemoteCriteriaResult> {
     const res = await fetch(CSV_URL, { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
-    const { data, maxUpdatedAt } = rowsToCriteriaMap(toRows(text));
+    const { data, maxUpdatedAt } = rowsToCriteriaMap(toRows(text), services);
     const fetchedAt = new Date().toISOString();
     writeCache(text, fetchedAt);
     return { data, source: "remote", fetchedAt, updatedAt: maxUpdatedAt };
   } catch {
     const cached = readCache();
     if (cached) {
-      const { data, maxUpdatedAt } = rowsToCriteriaMap(toRows(cached.raw));
+      const { data, maxUpdatedAt } = rowsToCriteriaMap(toRows(cached.raw), services);
       return { data, source: "cache", fetchedAt: cached.fetchedAt, updatedAt: maxUpdatedAt };
     }
     return seedResult();

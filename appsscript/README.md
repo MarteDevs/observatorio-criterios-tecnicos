@@ -52,6 +52,19 @@ versión** — así la misma URL sirve el código actualizado. Crear una
 implementación nueva en vez de editar la existente genera una URL distinta
 y rompe la que ya está en uso.
 
+### Pestañas de tipología dinámicas (solo con este endpoint)
+
+Con el endpoint JSON activo, las pestañas del Explorador ("Construcción de
+EESS...", etc.) ya **no están fijas en el código** — se arman solas leyendo
+las filas `lista = servicio` de `catalogos` (`${URL}?sheet=catalogos`, el
+mismo `doGet` con un parámetro). Para agregar una tipología nueva, un
+administrador solo necesita agregar una fila ahí (`codigo`, `etiqueta`,
+`sector`) y empezar a cargar criterios con ese `servicio` — no hace falta
+pedirle al consultor que edite código. Si la fuente configurada es el CSV
+publicado simple (sin este endpoint), o si falla la lectura de `catalogos`,
+el sitio muestra un aviso visible y usa la lista fija de siempre como
+respaldo, para no quedar sin pestañas.
+
 ## Uso diario
 
 - **Checklist > Nuevo criterio**: abre un formulario lateral con listas

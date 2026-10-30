@@ -25,15 +25,28 @@ var CRITERIOS_HEADERS = [
  * Nueva implementación) — ver appsscript/README.md. No existe doPost ni
  * ninguna función de escritura expuesta aquí: este endpoint físicamente no
  * puede modificar datos, pase lo que pase del lado de quien lo llame.
+ *
+ * ?sheet=criterios (por defecto): filas Vigente de `criterios`.
+ * ?sheet=catalogos: toda la pestaña `catalogos` tal cual (sin filtro de
+ * estado), usada por el sitio para armar las pestañas de tipología solas,
+ * sin tocar código, cuando se agrega una fila ahí (lista=servicio).
  */
-function doGet() {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_CRITERIOS);
+function doGet(e) {
+  var sheetParam = (e && e.parameter && e.parameter.sheet) || "criterios";
+  var sheetName = sheetParam === "catalogos" ? SHEET_CATALOGOS : SHEET_CRITERIOS;
+
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName);
   var rows = sheet.getDataRange().getValues();
   var headers = rows[0].map(function (h) { return String(h).trim(); });
   var estadoIdx = headers.indexOf("estado");
 
   var data = rows.slice(1)
-    .filter(function (r) { return String(r[estadoIdx] || "").trim() === "Vigente"; })
+    .filter(function (r) {
+      // El filtro Vigente/Retirado solo aplica a `criterios`; `catalogos` no
+      // tiene esa columna (estadoIdx = -1) y se devuelve completa.
+      if (estadoIdx < 0) return true;
+      return String(r[estadoIdx] || "").trim() === "Vigente";
+    })
     .map(function (r) {
       var obj = {};
       headers.forEach(function (h, i) {
