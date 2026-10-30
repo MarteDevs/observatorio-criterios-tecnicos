@@ -33,8 +33,9 @@ jobs:
         run: bun run build
         env:
           VITE_CRITERIOS_CSV_URL: ${{ secrets.VITE_CRITERIOS_CSV_URL }}
-          # BASE_PATH: /nombre-del-repo/   (descomentar y ajustar si el sitio
-          # se publica como project page en vez de dominio propio o user page)
+          # Project page (MarteDevs.github.io/observatorio-criterios-tecnicos/).
+          # Si el repo se renombra o se pasa a un dominio propio, ajustar o quitar.
+          BASE_PATH: /observatorio-criterios-tecnicos/
 
       - name: Build del widget embebible
         run: bun run build:widget
