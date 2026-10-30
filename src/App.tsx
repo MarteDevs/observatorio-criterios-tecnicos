@@ -39,7 +39,8 @@ import {
   Info,
   Copy,
   Check,
-  AlertCircle
+  AlertCircle,
+  Code2
 } from "lucide-react";
 
 export default function App() {
@@ -149,6 +150,39 @@ export default function App() {
 
   // Calendar filter state
   const [calendarFilter, setCalendarFilter] = useState<"all" | "confirmed" | "pending">("all");
+
+  // Sección "Insertar" (RF-09/RF-10, RNF-10): genera los snippets listos para copiar
+  const [embedMode, setEmbedMode] = useState<"iframe" | "script">("iframe");
+  const [embedSector, setEmbedSector] = useState<string>("");
+
+  const siteUrl = useMemo(() => {
+    if (typeof window === "undefined") return "";
+    const base = (import.meta.env.BASE_URL || "/").replace(/\/$/, "");
+    return `${window.location.origin}${base}`;
+  }, []);
+
+  const embedSectorQuery = embedSector ? `&sector=${embedSector}` : "";
+  const embedSectorAttr = embedSector ? ` data-sector="${embedSector}"` : "";
+
+  const iframeSnippet = `<iframe
+  id="observatorio-criterios-iframe"
+  src="${siteUrl}/?embed=1${embedSectorQuery}"
+  title="Observatorio de Criterios Técnicos para Expedientes Técnicos Subnacionales"
+  style="width:100%;border:0;display:block;min-height:480px;"
+></iframe>
+<script>
+  window.addEventListener("message", function (event) {
+    var data = event.data;
+    if (!data || data.source !== "observatorio-criterios" || data.type !== "resize") return;
+    var iframe = document.getElementById("observatorio-criterios-iframe");
+    if (iframe && typeof data.height === "number") iframe.style.height = data.height + "px";
+  });
+</script>`;
+
+  const scriptSnippet = `<script src="${siteUrl}/widget.js" defer></script>
+<checklist-expedientes${embedSectorAttr}></checklist-expedientes>`;
+
+  const embedSnippet = embedMode === "iframe" ? iframeSnippet : scriptSnippet;
 
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -402,6 +436,12 @@ export default function App() {
                 Calendario
               </a>
               <a
+                href="#insertar"
+                className="text-white/85 hover:text-white hover:border-b-2 hover:border-white/60 py-1 transition-colors no-underline"
+              >
+                Insertar
+              </a>
+              <a
                 href="#contacto"
                 className="text-white/85 hover:text-white hover:border-b-2 hover:border-white/60 py-1 transition-colors no-underline"
               >
@@ -468,6 +508,13 @@ export default function App() {
               className="text-sm font-medium text-white/90 hover:text-white py-1 border-b border-white/10 no-underline"
             >
               Calendario de mesas
+            </a>
+            <a
+              href="#insertar"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-sm font-medium text-white/90 hover:text-white py-1 border-b border-white/10 no-underline"
+            >
+              Insertar en tu sitio
             </a>
             <a
               href="#contacto"
@@ -1514,6 +1561,113 @@ export default function App() {
                   </div>
                 );
               })}
+            </div>
+          </div>
+        </section>
+        )}
+
+        {/* INSERTAR EN TU SITIO (RF-09/RF-10, RNF-10) */}
+        {!isEmbed && (
+        <section id="insertar" className="scroll-mt-16 py-12 lg:py-16 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-[#141a23]">
+          <div className="max-w-[1240px] mx-auto px-4 sm:px-6">
+            <div className="flex items-center gap-3 mb-2">
+              <Code2 className="text-slate-700 dark:text-slate-300" size={22} />
+              <h2 className="font-display text-2xl sm:text-[28px] font-semibold text-slate-900 dark:text-slate-100">
+                Insertar en tu sitio
+              </h2>
+            </div>
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 max-w-3xl">
+              Para la persona responsable del sitio web de tu institución: copia uno de estos dos bloques de código y pégalo donde quieras que aparezca el checklist. No hace falta programar nada más.
+            </p>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+              <div className="lg:col-span-4 space-y-5">
+                <div>
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                    Modo de inserción
+                  </span>
+                  <div className="flex items-center border border-slate-300 dark:border-slate-700 rounded overflow-hidden w-fit">
+                    <button
+                      onClick={() => setEmbedMode("iframe")}
+                      className={`px-3 py-1.5 text-xs font-medium cursor-pointer ${
+                        embedMode === "iframe"
+                          ? "bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white font-semibold"
+                          : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      iframe
+                    </button>
+                    <button
+                      onClick={() => setEmbedMode("script")}
+                      className={`px-3 py-1.5 text-xs font-medium cursor-pointer ${
+                        embedMode === "script"
+                          ? "bg-slate-200 dark:bg-slate-700 text-slate-900 dark:text-white font-semibold"
+                          : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      }`}
+                    >
+                      script
+                    </button>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 leading-relaxed">
+                    {embedMode === "iframe"
+                      ? "La opción más simple: funciona en cualquier sitio, incluso si quien lo administra no es programador."
+                      : "Se ve más integrado con el diseño del sitio anfitrión, pero requiere poder pegar una etiqueta <script>."}
+                  </p>
+                </div>
+
+                <div>
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                    Filtrar a un solo sector (opcional)
+                  </span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {["", "MINSA", "MINEDU", "MVCS", "MTC"].map((s) => (
+                      <button
+                        key={s || "todos"}
+                        onClick={() => setEmbedSector(s)}
+                        className={`text-xs px-3 py-1.5 rounded-full border transition-all cursor-pointer font-medium ${
+                          embedSector === s
+                            ? "bg-slate-200 dark:bg-slate-700 border-slate-400 dark:border-slate-500 text-slate-900 dark:text-white"
+                            : "bg-transparent border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"
+                        }`}
+                      >
+                        {s || "Todos"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="lg:col-span-8">
+                <div className="relative bg-[#121821] border border-slate-700 rounded shadow-xs overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-2 border-b border-slate-700 bg-[#1a2332]">
+                    <span className="text-[11px] font-mono text-slate-400">
+                      {embedMode === "iframe" ? "iframe-embed.html" : "widget-embed.html"}
+                    </span>
+                    <button
+                      onClick={() => copyToClipboard(embedSnippet, "embed-snippet")}
+                      className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-300 hover:text-white cursor-pointer"
+                    >
+                      {copiedId === "embed-snippet" ? (
+                        <>
+                          <Check size={13} /> Copiado
+                        </>
+                      ) : (
+                        <>
+                          <Copy size={13} /> Copiar código
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <pre className="p-4 text-[12px] leading-relaxed text-slate-200 overflow-x-auto custom-scroll">
+                    <code>{embedSnippet}</code>
+                  </pre>
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-3 leading-relaxed">
+                  {embedMode === "iframe"
+                    ? "Pega el bloque completo (el iframe y el script de abajo) donde quieras que se vea el checklist. El script hace que el recuadro ajuste su alto solo, sin dejar espacio en blanco ni barras de scroll internas."
+                    : "Pega la línea del <script> una sola vez en tu sitio (por ejemplo, antes de cerrar </body>), y la etiqueta <checklist-expedientes> donde quieras que aparezca — puedes repetirla varias veces en distintas páginas."}
+                </p>
+              </div>
             </div>
           </div>
         </section>
