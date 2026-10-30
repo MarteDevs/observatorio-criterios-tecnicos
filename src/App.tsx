@@ -571,7 +571,7 @@ export default function App() {
                       Organiza
                     </h3>
                   </div>
-                  <div className="relative rounded p-2.5 h-[92px] flex items-center justify-center shadow-xs overflow-hidden bg-white border border-slate-200">
+                  <div className="relative rounded p-2.5 h-[92px] flex items-center justify-center shadow-xs overflow-hidden bg-white border border-slate-200 dark:border-slate-700 dark:ring-1 dark:ring-white/5">
                     <div className="w-full h-full flex items-center justify-center p-1">
                       <img
                         src={withBase("/logos/pacifico-egp-up-dark.png")}
@@ -594,7 +594,7 @@ export default function App() {
                     {SPONSORS.map((sp) => (
                       <div
                         key={sp.id}
-                        className="relative group bg-white border border-slate-200 rounded px-3 py-2 h-[92px] flex items-center justify-center shadow-xs hover:border-slate-400 transition-colors overflow-hidden"
+                        className="relative group bg-white border border-slate-200 dark:border-slate-700 dark:ring-1 dark:ring-white/5 rounded px-3 py-2 h-[92px] flex items-center justify-center shadow-xs hover:border-slate-400 dark:hover:border-slate-500 transition-colors overflow-hidden"
                         title={sp.name}
                       >
                         <img

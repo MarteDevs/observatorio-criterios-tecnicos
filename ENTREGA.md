@@ -5,16 +5,25 @@ existe hoy, quién lo tiene, y cómo se opera de ahí en adelante. Complementa
 al SDD (`SDD – Checklist de Expedientes Técnicos...md`), que define el
 alcance y los requisitos (RF/RNF).
 
+## El sitio ya está en línea
+
+**https://martedevs.github.io/observatorio-criterios-tecnicos/**
+
+Publicado, con datos reales (no datos de ejemplo), filtro por sector,
+modo de inserción `?embed=1`, y un widget embebible (`/widget.js`). Lo que
+falta es exclusivamente administrativo (de quién son las cuentas), no
+funcional — ver la sección de propiedad abajo.
+
 ## Estado de propiedad hoy
 
-No hay ninguna cuenta institucional todavía. Mientras tanto:
+Todavía no hay ninguna cuenta institucional. Mientras tanto:
 
 | Componente | Dónde vive hoy | Acción pendiente |
 | --- | --- | --- |
 | Google Sheet (`criterios`, `catalogos`, `config`, `log_cambios`) | Cuenta de Google personal de quien desarrolló esto | Transferir propiedad del archivo (Drive) a la cuenta institucional en cuanto exista |
-| Apps Script (panel "Checklist") | Ligado al Sheet de arriba | **No se transfiere solo** — quien reciba el Sheet debe abrir Extensiones > Apps Script y volver a autorizarlo con su propia cuenta |
-| Repositorio de código | Solo local (`git init`, sin remoto) | Crear el repo en GitHub (cuenta/organización a definir) y hacer el primer `git push` |
-| Sitio público | No publicado | Se activa solo al crear el repo en GitHub y habilitar Pages (ver abajo) |
+| Apps Script (panel "Checklist" + endpoint JSON) | Ligado al Sheet de arriba | **No se transfiere solo** — quien reciba el Sheet debe abrir Extensiones > Apps Script y volver a autorizarlo con su propia cuenta |
+| Repositorio de código | [github.com/MarteDevs/observatorio-criterios-tecnicos](https://github.com/MarteDevs/observatorio-criterios-tecnicos), público | Transferir a una organización institucional cuando exista (Settings > Transfer ownership) |
+| Sitio público | **En línea** en GitHub Pages, desplegado automáticamente en cada `git push` a `main` | Ninguna — ya funciona; solo cambia de dueño junto con el repo |
 
 ## Cuando exista una cuenta institucional real
 
@@ -54,19 +63,49 @@ deja el Apps Script sin configurar del lado nuevo.
    gratis a Pages con un registro CNAME; si no, lo más fiel al "costo cero"
    del SDD es quedarse con la URL de `github.io`.
 
-## Cómo se maneja la actualización después de esto
+## Flujo de trabajo diario (actualizar criterios)
 
 Hay dos tipos de cambio, y solo uno necesita a alguien técnico:
 
-- **Cambiar criterios (alta, edición, retiro)**: se hace desde el menú
-  **Checklist** en el Sheet, o directo en la pestaña si se prefiere. No toca
-  código, no hay que compilar ni desplegar nada. El cambio aparece en la
-  página pública solo recargándola — con el margen de la caché de Google al
-  "Publicar en la Web" (unos minutos, cumple el RNF-02 del SDD pero no es
-  instantáneo).
-- **Cambiar el sitio (diseño, nuevas secciones, arreglar algo)**: eso sí
-  requiere editar el código y hacer `git push` a `main`. El workflow de
-  GitHub Actions hace el resto solo.
+1. **Cambiar criterios (alta, edición, retiro)** — esto es lo que se va a
+   hacer seguido, a medida que las Mesas Técnicas validen más contenido:
+   - **Alta**: Sheet > menú **Checklist > Nuevo criterio** (formulario
+     lateral con listas dependientes, genera el código solo).
+   - **Retiro**: **Checklist > Retirar criterio…**, pide el código. Nunca se
+     borra la fila — regla del SDD para preservar trazabilidad.
+   - **Edición de un campo existente**: directo en la celda del Sheet (no
+     hay un formulario de "editar" todavía, solo alta y retiro).
+   - No toca código, no hay que compilar ni desplegar nada. El cambio
+     aparece en la página pública solo recargándola.
+2. **Cambiar el sitio (diseño, nuevas secciones, arreglar algo)**: eso sí
+   requiere editar el código y hacer `git push` a `main`. El workflow de
+   GitHub Actions hace el resto solo.
+
+### De dónde lee la página sus datos
+
+`VITE_CRITERIOS_CSV_URL` (secret de GitHub Actions + `.env.local` en local)
+acepta dos tipos de URL, detectados automáticamente por el código:
+
+- **CSV publicado** (Archivo > Compartir > Publicar en la Web, solo la
+  pestaña `criterios`): más simple de configurar, pero Google cachea esa
+  URL unos minutos antes de reflejar un cambio.
+- **Endpoint JSON del Apps Script** (`doGet`, desplegado como Aplicación
+  web — ver `appsscript/README.md`): lectura prácticamente inmediata, sin
+  esa caché. Es de solo lectura por construcción (no existe `doPost`); no
+  hay forma de modificar datos a través de él.
+
+Cualquiera de los dos funciona con el mismo código — cambiar de uno a otro
+es solo actualizar el secret y volver a desplegar, nada de tocar `src/`.
+
+### Contenido pendiente de validar
+
+Los 41 criterios publicados hoy son los que ya estaban como ejemplo en el
+diseño original — **no son la matriz final**. A medida que SECO valide los
+resultados de cada Mesa Técnica (Salud, Educación, Vivienda y Saneamiento,
+Transportes), hay que cargarlos al Sheet real reemplazando o sumando a estos.
+Mientras un lote de datos no esté validado, se puede previsualizar con
+"Cargar Excel local" en la página (no toca el Sheet, solo la sesión del
+navegador) antes de subirlo definitivamente.
 
 ## Ícono del navegador (favicon)
 
