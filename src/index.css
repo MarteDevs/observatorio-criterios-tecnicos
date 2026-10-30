@@ -1,5 +1,15 @@
 @import "tailwindcss";
 
+/*
+ * El botón de tema (App.tsx) guarda la preferencia en el atributo
+ * data-theme del <html>. Sin esta línea, las clases dark: de Tailwind
+ * siguen el prefers-color-scheme del sistema operativo en vez de ese
+ * atributo — es decir, si el SO está en claro y el usuario eligió "oscuro"
+ * a mano, casi todo el sitio (que usa dark: en vez de las variables CSS de
+ * abajo) se queda ignorando el clic y mezclando ambos modos a la vez.
+ */
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
 :root {
   --navy: #1a2332;
   --navy-2: #243044;
