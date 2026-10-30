@@ -1,6 +1,8 @@
 // Capa de datos en vivo (RF-01/RF-04/RF-17, RNF-08): lee la pestaña `criterios`
-// publicada como CSV desde Google Sheets, con caché local y retorno a los datos
-// de ejemplo si la fuente en vivo no está configurada o no responde.
+// desde VITE_CRITERIOS_CSV_URL — admite tanto el CSV publicado de Sheets como
+// el JSON del endpoint opcional de Apps Script (ver appsscript/README.md) —,
+// con caché local y retorno a los datos de ejemplo si la fuente en vivo no
+// está configurada o no responde.
 import { SERVICES, INITIAL_DATA, type Criterion } from "./criteriaData";
 import { normStr, mapHeaderToField, buildCriterionFromFields, type CriterionFieldKey } from "./normalize";
 
@@ -62,6 +64,22 @@ export function parseCsv(text: string): string[][] {
   return rows.filter((r) => !(r.length === 1 && r[0].trim() === ""));
 }
 
+/**
+ * Acepta tanto el CSV publicado de Sheets como el JSON del endpoint opcional
+ * de Apps Script (doGet) — mismo VITE_CRITERIOS_CSV_URL sirve para los dos,
+ * detectado por la forma del texto de respuesta.
+ */
+function toRows(text: string): string[][] {
+  const trimmed = text.trim();
+  if (trimmed.startsWith("[")) {
+    const json = JSON.parse(trimmed) as Record<string, unknown>[];
+    if (json.length === 0) return [];
+    const headers = Object.keys(json[0]);
+    return [headers, ...json.map((obj) => headers.map((h) => String(obj[h] ?? "")))];
+  }
+  return parseCsv(text);
+}
+
 function rowsToCriteriaMap(rows: string[][]): {
   data: Record<string, Criterion[]>;
   maxUpdatedAt: string | null;
@@ -104,18 +122,18 @@ function rowsToCriteriaMap(rows: string[][]): {
   return { data: buckets, maxUpdatedAt };
 }
 
-function readCache(): { csv: string; fetchedAt: string } | null {
+function readCache(): { raw: string; fetchedAt: string } | null {
   try {
-    const raw = localStorage.getItem(CACHE_KEY);
-    return raw ? (JSON.parse(raw) as { csv: string; fetchedAt: string }) : null;
+    const cached = localStorage.getItem(CACHE_KEY);
+    return cached ? (JSON.parse(cached) as { raw: string; fetchedAt: string }) : null;
   } catch {
     return null;
   }
 }
 
-function writeCache(csv: string, fetchedAt: string) {
+function writeCache(raw: string, fetchedAt: string) {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ csv, fetchedAt }));
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ raw, fetchedAt }));
   } catch {
     // cuota de almacenamiento llena: los datos en vivo siguen aplicando en esta sesión
   }
@@ -136,7 +154,7 @@ export async function fetchRemoteCriteria(): Promise<RemoteCriteriaResult> {
 
   const cachedBeforeFetch = readCache();
   if (cachedBeforeFetch && Date.now() - new Date(cachedBeforeFetch.fetchedAt).getTime() < FRESH_WINDOW_MS) {
-    const { data, maxUpdatedAt } = rowsToCriteriaMap(parseCsv(cachedBeforeFetch.csv));
+    const { data, maxUpdatedAt } = rowsToCriteriaMap(toRows(cachedBeforeFetch.raw));
     return { data, source: "remote", fetchedAt: cachedBeforeFetch.fetchedAt, updatedAt: maxUpdatedAt };
   }
 
@@ -144,14 +162,14 @@ export async function fetchRemoteCriteria(): Promise<RemoteCriteriaResult> {
     const res = await fetch(CSV_URL, { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
-    const { data, maxUpdatedAt } = rowsToCriteriaMap(parseCsv(text));
+    const { data, maxUpdatedAt } = rowsToCriteriaMap(toRows(text));
     const fetchedAt = new Date().toISOString();
     writeCache(text, fetchedAt);
     return { data, source: "remote", fetchedAt, updatedAt: maxUpdatedAt };
   } catch {
     const cached = readCache();
     if (cached) {
-      const { data, maxUpdatedAt } = rowsToCriteriaMap(parseCsv(cached.csv));
+      const { data, maxUpdatedAt } = rowsToCriteriaMap(toRows(cached.raw));
       return { data, source: "cache", fetchedAt: cached.fetchedAt, updatedAt: maxUpdatedAt };
     }
     return seedResult();

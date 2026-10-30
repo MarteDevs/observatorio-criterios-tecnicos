@@ -30,6 +30,28 @@ dentro del propio Google Sheet que ya tiene las 4 pestañas generadas por
    `criterios` como CSV, y pegar esa URL en `VITE_CRITERIOS_CSV_URL`
    (`.env.local` del proyecto web).
 
+## Endpoint JSON (opcional, alternativa dinámica al CSV publicado)
+
+`doGet()` en `Code.gs` devuelve en JSON las filas `Vigente` de `criterios` —
+de solo lectura, sin caché de Google de por medio (a diferencia de
+"Publicar en la Web"). No activa nada hasta que se despliega:
+
+1. En el editor de Apps Script: **Implementar > Nueva implementación**.
+2. Tipo: **Aplicación web**. Ejecutar como: **Yo**. Quién tiene acceso:
+   **Cualquier usuario**.
+3. Implementar — copia la URL que termina en `/exec`.
+4. Pegar esa URL como `VITE_CRITERIOS_CSV_URL` en `.env.local` (y en el
+   secret de GitHub Actions) **en vez de** la URL del CSV publicado. El
+   código del sitio detecta automáticamente si la URL responde JSON o CSV.
+
+**Importante para actualizaciones futuras**: si después vuelves a tocar
+`Code.gs` (p. ej. `clasp push` de un cambio), la URL de este paso **no se
+actualiza sola**. Hay que ir a **Implementar > Gestionar implementaciones**,
+editar la implementación existente (ícono de lápiz) y elegir **Nueva
+versión** — así la misma URL sirve el código actualizado. Crear una
+implementación nueva en vez de editar la existente genera una URL distinta
+y rompe la que ya está en uso.
+
 ## Uso diario
 
 - **Checklist > Nuevo criterio**: abre un formulario lateral con listas

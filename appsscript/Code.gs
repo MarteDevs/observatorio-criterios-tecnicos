@@ -19,6 +19,30 @@ var CRITERIOS_HEADERS = [
   "obligatoriedad", "diferencial", "orden", "estado", "actualizado_el"
 ];
 
+/**
+ * Endpoint JSON de solo lectura (RF-01/04, alternativa dinámica al CSV
+ * publicado). Se activa desplegándolo como "Aplicación web" (Implementar >
+ * Nueva implementación) — ver appsscript/README.md. No existe doPost ni
+ * ninguna función de escritura expuesta aquí: este endpoint físicamente no
+ * puede modificar datos, pase lo que pase del lado de quien lo llame.
+ */
+function doGet() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_CRITERIOS);
+  var rows = sheet.getDataRange().getValues();
+  var headers = rows[0].map(function (h) { return String(h).trim(); });
+  var estadoIdx = headers.indexOf("estado");
+
+  var data = rows.slice(1)
+    .filter(function (r) { return String(r[estadoIdx] || "").trim() === "Vigente"; })
+    .map(function (r) {
+      var obj = {};
+      headers.forEach(function (h, i) { obj[h] = r[i]; });
+      return obj;
+    });
+
+  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
+}
+
 function onOpen() {
   SpreadsheetApp.getUi()
     .createMenu("Checklist")
