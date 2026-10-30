@@ -154,6 +154,12 @@ export default function App() {
   // Sección "Insertar" (RF-09/RF-10, RNF-10): genera los snippets listos para copiar
   const [embedMode, setEmbedMode] = useState<"iframe" | "script">("iframe");
   const [embedSector, setEmbedSector] = useState<string>("");
+  const [embedStyle, setEmbedStyle] = useState<"default" | "heredado" | "personalizado">("default");
+  const [embedColorPrimary, setEmbedColorPrimary] = useState("#1a2332");
+  const [embedColorText, setEmbedColorText] = useState("#1f2933");
+  const [embedColorBg, setEmbedColorBg] = useState("#ffffff");
+  const [embedFont, setEmbedFont] = useState("");
+  const [embedRadius, setEmbedRadius] = useState("4px");
 
   const siteUrl = useMemo(() => {
     if (typeof window === "undefined") return "";
@@ -163,6 +169,15 @@ export default function App() {
 
   const embedSectorQuery = embedSector ? `&sector=${embedSector}` : "";
   const embedSectorAttr = embedSector ? ` data-sector="${embedSector}"` : "";
+
+  const embedStyleAttrs =
+    embedStyle === "heredado"
+      ? ` data-style="heredado"`
+      : embedStyle === "personalizado"
+      ? ` data-style="personalizado" data-color-primary="${embedColorPrimary}" data-color-text="${embedColorText}" data-color-bg="${embedColorBg}"${
+          embedFont ? ` data-font="${embedFont}"` : ""
+        } data-radius="${embedRadius}"`
+      : "";
 
   const iframeSnippet = `<iframe
   id="observatorio-criterios-iframe"
@@ -180,7 +195,7 @@ export default function App() {
 </script>`;
 
   const scriptSnippet = `<script src="${siteUrl}/widget.js" defer></script>
-<checklist-expedientes${embedSectorAttr}></checklist-expedientes>`;
+<checklist-expedientes${embedSectorAttr}${embedStyleAttrs}></checklist-expedientes>`;
 
   const embedSnippet = embedMode === "iframe" ? iframeSnippet : scriptSnippet;
 
@@ -1634,6 +1649,92 @@ export default function App() {
                       </button>
                     ))}
                   </div>
+                </div>
+
+                <div>
+                  <span className="block text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
+                    Estilo
+                  </span>
+                  {embedMode === "iframe" ? (
+                    <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed italic">
+                      El modo iframe no puede adaptar colores del sitio anfitrión — es una página aparte, con su propio origen, y solo responde al tema claro/oscuro del sistema. Para adaptar colores, elige el modo script.
+                    </p>
+                  ) : (
+                    <>
+                      <div className="flex flex-wrap gap-1.5 mb-3">
+                        {(["default", "heredado", "personalizado"] as const).map((s) => (
+                          <button
+                            key={s}
+                            onClick={() => setEmbedStyle(s)}
+                            className={`text-xs px-3 py-1.5 rounded-full border transition-all cursor-pointer font-medium ${
+                              embedStyle === s
+                                ? "bg-slate-200 dark:bg-slate-700 border-slate-400 dark:border-slate-500 text-slate-900 dark:text-white"
+                                : "bg-transparent border-slate-200 dark:border-slate-700 text-slate-500 dark:text-slate-400"
+                            }`}
+                          >
+                            {s === "default" ? "Por defecto" : s === "heredado" ? "Heredado" : "Personalizado"}
+                          </button>
+                        ))}
+                      </div>
+
+                      {embedStyle === "heredado" && (
+                        <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+                          Toma la tipografía y el color de texto/fondo del sitio anfitrión automáticamente. Si el contraste no es legible, vuelve solo al estilo por defecto — no hace falta configurar nada más.
+                        </p>
+                      )}
+
+                      {embedStyle === "personalizado" && (
+                        <div className="space-y-2.5">
+                          <div className="grid grid-cols-3 gap-2">
+                            <label className="text-[11px] text-slate-500 dark:text-slate-400 flex flex-col gap-1">
+                              Principal
+                              <input
+                                type="color"
+                                value={embedColorPrimary}
+                                onChange={(e) => setEmbedColorPrimary(e.target.value)}
+                                className="h-8 w-full rounded border border-slate-300 dark:border-slate-600 cursor-pointer bg-transparent"
+                              />
+                            </label>
+                            <label className="text-[11px] text-slate-500 dark:text-slate-400 flex flex-col gap-1">
+                              Texto
+                              <input
+                                type="color"
+                                value={embedColorText}
+                                onChange={(e) => setEmbedColorText(e.target.value)}
+                                className="h-8 w-full rounded border border-slate-300 dark:border-slate-600 cursor-pointer bg-transparent"
+                              />
+                            </label>
+                            <label className="text-[11px] text-slate-500 dark:text-slate-400 flex flex-col gap-1">
+                              Fondo
+                              <input
+                                type="color"
+                                value={embedColorBg}
+                                onChange={(e) => setEmbedColorBg(e.target.value)}
+                                className="h-8 w-full rounded border border-slate-300 dark:border-slate-600 cursor-pointer bg-transparent"
+                              />
+                            </label>
+                          </div>
+                          <input
+                            type="text"
+                            value={embedFont}
+                            onChange={(e) => setEmbedFont(e.target.value)}
+                            placeholder="Tipografía CSS (opcional), ej. Georgia, serif"
+                            className="w-full text-xs px-2.5 py-1.5 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400"
+                          />
+                          <input
+                            type="text"
+                            value={embedRadius}
+                            onChange={(e) => setEmbedRadius(e.target.value)}
+                            placeholder="Radio de bordes, ej. 4px"
+                            className="w-full text-xs px-2.5 py-1.5 border border-slate-300 dark:border-slate-600 rounded bg-white dark:bg-slate-900 text-slate-900 dark:text-white placeholder-slate-400"
+                          />
+                          <p className="text-[11px] text-slate-400 leading-relaxed">
+                            El par texto/fondo también pasa por el chequeo de contraste — si no es legible, el widget ignora estos colores y usa el estilo por defecto.
+                          </p>
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
 
