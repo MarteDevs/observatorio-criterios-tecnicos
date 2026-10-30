@@ -14,6 +14,15 @@ modo de inserción `?embed=1`, y un widget embebible (`/widget.js`). Lo que
 falta es exclusivamente administrativo (de quién son las cuentas), no
 funcional — ver la sección de propiedad abajo.
 
+**Para insertar el checklist en otro sitio** (RNF-10), el responsable web
+no necesita tocar ningún archivo de este repo: la propia página tiene una
+sección **"Insertar en tu sitio"** (`/#insertar`) que genera el código listo
+para copiar — modo iframe o script, con o sin filtro de sector — con la URL
+real ya puesta. Los archivos `data-export/embed-snippet.html` y
+`widget-snippet.html` siguen existiendo como referencia versionada para
+quien edite el código, pero ya no son el punto de entrega para el usuario
+final no técnico.
+
 ## Estado de propiedad hoy
 
 Todavía no hay ninguna cuenta institucional. Mientras tanto:
