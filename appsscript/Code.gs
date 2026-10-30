@@ -36,7 +36,14 @@ function doGet() {
     .filter(function (r) { return String(r[estadoIdx] || "").trim() === "Vigente"; })
     .map(function (r) {
       var obj = {};
-      headers.forEach(function (h, i) { obj[h] = r[i]; });
+      headers.forEach(function (h, i) {
+        var value = r[i];
+        // Sheets devuelve las celdas de fecha como objeto Date; JSON.stringify
+        // las serializaría como ISO completo (2026-10-29T05:00:00.000Z) en vez
+        // de "2026-10-29" como hace el CSV publicado — se normaliza acá para
+        // que el sitio reciba el mismo formato sin importar la fuente.
+        obj[h] = value instanceof Date ? Utilities.formatDate(value, "America/Lima", "yyyy-MM-dd") : value;
+      });
       return obj;
     });
 
