@@ -8,6 +8,7 @@ import {
   type ServiceDefinition
 } from "./data/criteriaData";
 import { SPONSORS } from "./data/logos";
+import { withBase } from "./data/assetPath";
 import {
   normStr,
   mapHeaderToField,
@@ -353,7 +354,7 @@ export default function App() {
             aria-label="Universidad del Pacífico, Escuela de Gestión Pública"
           >
             <img
-              src="/logos/pacifico-egp-up.png"
+              src={withBase("/logos/pacifico-egp-up.png")}
               alt="Universidad del Pacífico - Escuela de Gestión Pública"
               className="h-10 w-auto object-contain shrink-0 drop-shadow-xs"
             />
@@ -573,7 +574,7 @@ export default function App() {
                   <div className="relative rounded p-2.5 h-[92px] flex items-center justify-center shadow-xs overflow-hidden bg-white border border-slate-200">
                     <div className="w-full h-full flex items-center justify-center p-1">
                       <img
-                        src="/logos/pacifico-egp-up-dark.png"
+                        src={withBase("/logos/pacifico-egp-up-dark.png")}
                         alt="Universidad del Pacífico"
                         className="max-h-[66px] max-w-full object-contain mx-auto"
                       />
@@ -597,7 +598,7 @@ export default function App() {
                         title={sp.name}
                       >
                         <img
-                          src={sp.imageSrc || `/logos/${sp.id}.png`}
+                          src={sp.imageSrc || withBase(`/logos/${sp.id}.png`)}
                           alt={sp.name}
                           className="max-h-[62px] max-w-full object-contain mx-auto"
                         />
@@ -1541,7 +1542,7 @@ export default function App() {
           <div className="grid grid-cols-1 md:grid-cols-12 gap-8 mb-8">
             <div className="md:col-span-6">
               <img
-                src="/logos/pacifico-egp-up.png"
+                src={withBase("/logos/pacifico-egp-up.png")}
                 alt="Universidad del Pacífico - Escuela de Gestión Pública"
                 className="h-10 w-auto object-contain mb-3 drop-shadow-xs"
               />
@@ -1574,7 +1575,7 @@ export default function App() {
                     title={sp.name}
                   >
                     <img
-                      src={sp.imageSrc || `/logos/${sp.id}.png`}
+                      src={sp.imageSrc || withBase(`/logos/${sp.id}.png`)}
                       alt={sp.name}
                       className="max-h-[38px] max-w-full object-contain mx-auto"
                     />

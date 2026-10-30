@@ -1,5 +1,6 @@
 // Institutional Vector Logos for Observatorio de Criterios Técnicos
 // Meticulously matched to official institutional design assets provided by the user
+import { withBase } from "./assetPath";
 
 // 1. Official Universidad del Pacífico Oval Crest + Typography
 export const UP_CREST_SVG = `<svg viewBox="0 0 100 130" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Escudo Universidad del Pacífico" class="w-auto h-full max-h-[56px] shrink-0">
@@ -235,7 +236,7 @@ export const SPONSORS: Sponsor[] = [
     name: "Instituto Bicentenario",
     subtitle: "Investigación y políticas públicas",
     svg: LOGO_BIC,
-    imageSrc: "/logos/bicentenariopng.png",
+    imageSrc: withBase("/logos/bicentenariopng.png"),
     cardClass: "bg-white border-slate-200 shadow-xs",
     footerClass: "bg-white border-white/30 shadow-xs"
   },
@@ -244,7 +245,7 @@ export const SPONSORS: Sponsor[] = [
     name: "Programa GFP Subnacional",
     subtitle: "Cooperación Suiza · SECO",
     svg: LOGO_GFP,
-    imageSrc: "/logos/GFC.png",
+    imageSrc: withBase("/logos/GFC.png"),
     cardClass: "bg-white border-slate-200 shadow-xs",
     footerClass: "bg-white border-white/30 shadow-xs"
   },
@@ -253,7 +254,7 @@ export const SPONSORS: Sponsor[] = [
     name: "InvierteLab",
     subtitle: "Iniciativa y soporte técnico",
     svg: LOGO_IL,
-    imageSrc: "/logos/inviertelab.png?v=4",
+    imageSrc: withBase("/logos/inviertelab.png?v=4"),
     cardClass: "bg-white border-slate-200 shadow-xs",
     footerClass: "bg-white border-white/30 shadow-xs"
   }
