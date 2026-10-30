@@ -1,0 +1,6 @@
+{
+  "name": "Observatorio de Criterios Técnicos para Expedientes Técnicos Subnacionales",
+  "description": "Espacio académico de sistematización de la Escuela de Gestión Pública de la Universidad del Pacífico y la DGPMI del MEF para expedientes técnicos de inversión pública subnacional.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

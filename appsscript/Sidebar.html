@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top" />
+    <meta charset="utf-8" />
+    <style>
+      body { font-family: "Public Sans", Arial, sans-serif; font-size: 12px; color: #1f2933; padding: 8px 4px; }
+      label { display: block; font-weight: 600; margin: 10px 0 3px; font-size: 11px; }
+      select, input, textarea {
+        width: 100%; box-sizing: border-box; padding: 5px 6px; border: 1px solid #d9dde2; border-radius: 3px; font-size: 12px;
+      }
+      textarea { min-height: 48px; resize: vertical; }
+      button {
+        margin-top: 14px; width: 100%; padding: 8px; background: #1a2332; color: #fff; border: none; border-radius: 3px;
+        font-weight: 600; cursor: pointer;
+      }
+      button:disabled { opacity: 0.6; cursor: default; }
+      #status { margin-top: 10px; font-size: 11px; }
+      #status.ok { color: #24533d; }
+      #status.err { color: #a4262c; }
+    </style>
+  </head>
+  <body>
+    <label for="sector">Sector</label>
+    <select id="sector"></select>
+
+    <label for="servicio">Servicio / tipología</label>
+    <select id="servicio"></select>
+
+    <label for="tipologia">Tipo de intervención</label>
+    <select id="tipologia"></select>
+
+    <label for="componente">Componente / bloque</label>
+    <input id="componente" type="text" placeholder="Ej. Categorización y Programa Médico-Arquitectónico" />
+
+    <label for="item">Ítem de verificación</label>
+    <input id="item" type="text" placeholder="Título corto del criterio" />
+
+    <label for="criterio">Qué debe contener / cómo verificar</label>
+    <textarea id="criterio" placeholder="Descripción detallada del criterio"></textarea>
+
+    <label for="base_normativa">Base normativa</label>
+    <input id="base_normativa" type="text" placeholder="Norma exacta" />
+
+    <label for="articulo_o_seccion">Artículo / sección</label>
+    <input id="articulo_o_seccion" type="text" />
+
+    <label for="enlace_norma">Enlace a la norma (https://...)</label>
+    <input id="enlace_norma" type="text" />
+
+    <label for="ambito">Ámbito</label>
+    <input id="ambito" type="text" placeholder="Ej. GL, GR" />
+
+    <label for="obligatoriedad">Obligatoriedad</label>
+    <select id="obligatoriedad"></select>
+
+    <label for="diferencial">Diferencial</label>
+    <select id="diferencial"></select>
+
+    <label for="orden">Orden (número)</label>
+    <input id="orden" type="number" min="1" value="1" />
+
+    <button id="submitBtn" onclick="submitForm()">Agregar criterio</button>
+    <div id="status"></div>
+
+    <script>
+      function fillSelect(select, items, labelKey, valueKey) {
+        select.innerHTML = "";
+        items.forEach(function (it) {
+          var opt = document.createElement("option");
+          opt.value = it[valueKey];
+          opt.textContent = it[labelKey] || it[valueKey];
+          select.appendChild(opt);
+        });
+      }
+
+      var catalogos = { sectores: [], servicios: [], tipologias: [], obligatoriedades: [], diferenciales: [] };
+
+      function refreshServiciosPorSector() {
+        var sectorSel = document.getElementById("sector");
+        var servicioSel = document.getElementById("servicio");
+        var sector = sectorSel.value;
+        var filtrados = catalogos.servicios.filter(function (s) { return s.sector === sector; });
+        fillSelect(servicioSel, filtrados.length ? filtrados : catalogos.servicios, "etiqueta", "codigo");
+      }
+
+      google.script.run.withSuccessHandler(function (data) {
+        catalogos = data;
+        fillSelect(document.getElementById("sector"), data.sectores, "etiqueta", "codigo");
+        fillSelect(document.getElementById("servicio"), data.servicios, "etiqueta", "codigo");
+        fillSelect(document.getElementById("tipologia"), data.tipologias, "etiqueta", "codigo");
+        fillSelect(document.getElementById("obligatoriedad"), data.obligatoriedades, "etiqueta", "codigo");
+        fillSelect(document.getElementById("diferencial"), data.diferenciales, "etiqueta", "codigo");
+        document.getElementById("sector").addEventListener("change", refreshServiciosPorSector);
+      }).getCatalogos();
+
+      function submitForm() {
+        var statusEl = document.getElementById("status");
+        var btn = document.getElementById("submitBtn");
+        var fields = {
+          sector: document.getElementById("sector").value,
+          servicio: document.getElementById("servicio").value,
+          tipologia: document.getElementById("tipologia").value,
+          componente: document.getElementById("componente").value.trim(),
+          item: document.getElementById("item").value.trim(),
+          criterio: document.getElementById("criterio").value.trim(),
+          base_normativa: document.getElementById("base_normativa").value.trim(),
+          articulo_o_seccion: document.getElementById("articulo_o_seccion").value.trim(),
+          enlace_norma: document.getElementById("enlace_norma").value.trim(),
+          ambito: document.getElementById("ambito").value.trim(),
+          obligatoriedad: document.getElementById("obligatoriedad").value,
+          diferencial: document.getElementById("diferencial").value,
+          orden: document.getElementById("orden").value || "1"
+        };
+
+        if (!fields.componente || !fields.item || !fields.criterio || !fields.base_normativa) {
+          statusEl.textContent = "Completa componente, ítem, criterio y base normativa.";
+          statusEl.className = "err";
+          return;
+        }
+
+        btn.disabled = true;
+        statusEl.textContent = "Guardando…";
+        statusEl.className = "";
+
+        google.script.run
+          .withSuccessHandler(function (codigo) {
+            statusEl.textContent = "Agregado como " + codigo + ".";
+            statusEl.className = "ok";
+            btn.disabled = false;
+            ["componente", "item", "criterio", "base_normativa", "articulo_o_seccion", "enlace_norma", "ambito"].forEach(
+              function (id) { document.getElementById(id).value = ""; }
+            );
+          })
+          .withFailureHandler(function (err) {
+            statusEl.textContent = "Error: " + err.message;
+            statusEl.className = "err";
+            btn.disabled = false;
+          })
+          .agregarCriterio(fields);
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,30 @@
+<!--
+  Snippet de referencia para el responsable web del sitio que inserta el
+  Observatorio de Criterios Técnicos (RF-06/RF-09, modo iframe).
+
+  1. Reemplazar TU-DOMINIO por el dominio donde quede publicada la página
+     (GitHub Pages u otro hosting gratuito).
+  2. Pegar este bloque donde se quiera mostrar el checklist.
+  3. El iframe empieza con una altura mínima y se autoajusta en cuanto la
+     página hija reporta su alto real vía postMessage.
+-->
+<iframe
+  id="observatorio-criterios-iframe"
+  src="https://TU-DOMINIO/?embed=1"
+  title="Observatorio de Criterios Técnicos para Expedientes Técnicos Subnacionales"
+  style="width:100%;border:0;display:block;min-height:480px;"
+></iframe>
+<script>
+  window.addEventListener("message", function (event) {
+    var data = event.data;
+    if (!data || data.source !== "observatorio-criterios" || data.type !== "resize") return;
+    var iframe = document.getElementById("observatorio-criterios-iframe");
+    if (iframe && typeof data.height === "number") {
+      iframe.style.height = data.height + "px";
+    }
+  });
+</script>
+<!--
+  Variante con filtro de sector (RF-07), por ejemplo para el sitio de MINSA:
+  src="https://TU-DOMINIO/?embed=1&sector=MINSA"
+-->

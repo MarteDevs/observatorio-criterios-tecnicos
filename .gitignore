@@ -1,0 +1,7 @@
+node_modules/
+dist/
+dist-widget/
+.env.local
+*.local
+.DS_Store
+appsscript/.clasp.json

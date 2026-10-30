@@ -1,0 +1,24 @@
+﻿lista,codigo,etiqueta,sector
+sector,MINSA,MINSA / PRONIS,
+sector,MINEDU,MINEDU,
+sector,MVCS,MVCS,
+sector,MTC,MTC,
+sector,TRANSVERSAL,Marco Transversal (aplica a todas las tipologías),
+servicio,eess-c,Construcción de EESS I-3/I-4,MINSA
+servicio,eess-m,Mejoramiento de EESS I-3/I-4,MINSA
+servicio,ie-m,Mejoramiento de IE EBR,MINEDU
+servicio,san-c,Creación de saneamiento rural,MVCS
+servicio,san-a,Ampliación de saneamiento rural,MVCS
+servicio,via-m,Mejoramiento de vías provinciales,MTC
+servicio,via-r,Rehabilitación de vías provinciales,MTC
+tipologia,Creación,Creación,
+tipologia,Ampliación,Ampliación,
+tipologia,Mejoramiento,Mejoramiento,
+tipologia,Rehabilitación,Rehabilitación,
+estado,Vigente,Vigente,
+estado,Retirado,Retirado,
+obligatoriedad,Obligatorio,Obligatorio,
+obligatoriedad,Condicional,Condicional,
+obligatoriedad,Recomendado,Recomendado,
+diferencial,Sí,Sí,
+diferencial,No,No,

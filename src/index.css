@@ -1,0 +1,106 @@
+@import "tailwindcss";
+
+:root {
+  --navy: #1a2332;
+  --navy-2: #243044;
+  --ink: #1f2933;
+  --muted: #5b6673;
+  --line: #d9dde2;
+  --bar: #eceff2;
+  --bg: #ffffff;
+  --soft: #f6f7f9;
+  --link: #1d4e89;
+  --ok-fg: #24533d;
+  --ok-bg: #e2ede6;
+  --cond-fg: #7a4f00;
+  --cond-bg: #f5ead2;
+  --rec-fg: #4b5563;
+  --rec-bg: #eceef0;
+  --dif-bg: #fbf4e4;
+  --dif-line: #c98a12;
+  --font: "Public Sans", "Helvetica Neue", -apple-system, BlinkMacSystemFont, Arial, sans-serif;
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+:root[data-theme="dark"] {
+  --ink: #e4e7eb;
+  --muted: #a3adb8;
+  --line: #34404f;
+  --bar: #1f2835;
+  --bg: #121821;
+  --soft: #18202b;
+  --link: #8db7e8;
+  --ok-fg: #9fd4b4;
+  --ok-bg: #1d3328;
+  --cond-fg: #f0c877;
+  --cond-bg: #3a2e14;
+  --rec-fg: #c3cad2;
+  --rec-bg: #2a3340;
+  --dif-bg: #2b2517;
+  --dif-line: #d9a13a;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ink: #e4e7eb;
+    --muted: #a3adb8;
+    --line: #34404f;
+    --bar: #1f2835;
+    --bg: #121821;
+    --soft: #18202b;
+    --link: #8db7e8;
+    --ok-fg: #9fd4b4;
+    --ok-bg: #1d3328;
+    --cond-fg: #f0c877;
+    --cond-bg: #3a2e14;
+    --rec-fg: #c3cad2;
+    --rec-bg: #2a3340;
+    --dif-bg: #2b2517;
+    --dif-line: #d9a13a;
+  }
+}
+
+html {
+  scroll-padding-top: calc(env(safe-area-inset-top, 0px) + 64px);
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+:focus-visible {
+  outline: 2px solid #4a7fc1;
+  outline-offset: 2px;
+}
+
+/* Custom scrollbars for data tables */
+.custom-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line) transparent;
+}
+.custom-scroll::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: var(--line);
+  border-radius: 3px;
+}

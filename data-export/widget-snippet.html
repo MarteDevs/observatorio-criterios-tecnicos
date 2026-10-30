@@ -1,0 +1,49 @@
+<!--
+  Modo de inserción "script" / web component (RF-10). Generar el archivo con
+  `bun run build:widget` (lee VITE_CRITERIOS_CSV_URL de .env.local igual que
+  la página principal) y publicar dist-widget/widget.js junto al sitio.
+
+  No necesita React ni ningún bundler del lado del sitio anfitrión: es un
+  <script> clásico que registra la etiqueta <checklist-expedientes>.
+-->
+<script src="https://TU-DOMINIO/widget.js" defer></script>
+
+<!-- Estilo por defecto (RF-11) -->
+<checklist-expedientes></checklist-expedientes>
+
+<!-- Filtrado a un solo sector (equivalente a RF-07 para el modo script) -->
+<checklist-expedientes data-sector="MINSA"></checklist-expedientes>
+
+<!-- Estilo heredado (RF-12): toma tipografía y color del sitio anfitrión;
+     si no es legible, vuelve automáticamente al estilo por defecto (RF-14) -->
+<checklist-expedientes data-style="heredado"></checklist-expedientes>
+
+<!-- Estilo personalizado por lista cerrada de atributos (RF-13). El par
+     texto/fondo también pasa por el chequeo de contraste de RF-14. -->
+<checklist-expedientes
+  data-style="personalizado"
+  data-color-primary="#0b4f6c"
+  data-color-text="#1f2933"
+  data-color-bg="#f4f7f9"
+  data-font="Georgia, serif"
+  data-radius="8px"
+  data-header="hide"
+></checklist-expedientes>
+
+<!--
+  Atributos soportados (lista cerrada, RF-13):
+    data-sector            MINSA | MINEDU | MVCS | MTC
+    data-style              default | heredado | personalizado
+    data-color-primary      color de acentos (pestaña activa, enlaces)
+    data-color-text         color de texto (solo con data-style="personalizado")
+    data-color-bg           color de fondo (solo con data-style="personalizado")
+    data-font                font-family CSS
+    data-radius              radio de bordes CSS (ej. "4px")
+    data-header              show (por defecto) | hide — oculta el título
+                              decorativo interno; la marca mínima del pie
+                              ("Fuente: Observatorio...", RF-15) nunca se
+                              oculta y no hay forma de quitarla por atributo.
+
+  El widget no carga ninguna hoja de estilos externa (RF-16): todo su CSS
+  vive dentro del Shadow DOM del propio componente.
+-->
