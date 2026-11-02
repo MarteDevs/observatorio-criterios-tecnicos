@@ -6,3 +6,4 @@ public/api/
 *.local
 .DS_Store
 appsscript/.clasp.json
+.wrangler/
