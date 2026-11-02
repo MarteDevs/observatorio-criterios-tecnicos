@@ -90,6 +90,11 @@ export function buildCriterionFromFields(obj: Partial<Record<CriterionFieldKey, 
     amb: obj.amb || "GL, GR",
     obl: normalizeObligatoriedad(obj.obl || ""),
     dif: normalizeDiferencial(obj.dif || ""),
-    enlace_norma: obj.enlace_norma || undefined
+    enlace_norma: obj.enlace_norma || undefined,
+    sector: obj.sector || undefined,
+    servicio: obj.servicio || undefined,
+    tipologia: obj.tipologia || undefined,
+    estado: obj.estado || undefined,
+    actualizado_el: obj.actualizado_el || undefined
   };
 }

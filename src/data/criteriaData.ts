@@ -10,6 +10,11 @@ export interface Criterion {
   obl: "Obligatorio" | "Condicional" | "Recomendado";
   dif: "Sí" | "No";
   enlace_norma?: string;
+  sector?: string;
+  servicio?: string;
+  tipologia?: string;
+  estado?: string;
+  actualizado_el?: string;
 }
 
 export interface ServiceDefinition {

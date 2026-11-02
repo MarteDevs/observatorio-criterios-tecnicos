@@ -75,6 +75,9 @@ respaldo, para no quedar sin pestañas.
   trazabilidad y los códigos no se reutilizan).
 - **Checklist > Ver registro de cambios**: salta a la pestaña
   `log_cambios` (quién, cuándo, qué acción, sobre qué código).
+- **Edición directa en una celda**: también queda registrada sola — un
+  trigger (`onEdit` en `Code.gs`) estampa `actualizado_el` y deja el rastro
+  en `log_cambios`, sin que haga falta pasar por el menú ni instalar nada.
 
 ## Qué no hace este nivel
 

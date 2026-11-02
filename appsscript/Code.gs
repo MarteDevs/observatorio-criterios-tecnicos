@@ -111,34 +111,51 @@ function getCatalogos() {
   return out;
 }
 
+/** Siguiente número libre a partir del sufijo más alto ya usado (no del conteo de filas, que se duplica si alguna fue retirada o renumerada). */
 function generarCodigo_(servicioKey) {
   var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_CRITERIOS);
   var data = sheet.getDataRange().getValues();
   var servicioIdx = CRITERIOS_HEADERS.indexOf("servicio");
-  var count = 0;
+  var codigoIdx = CRITERIOS_HEADERS.indexOf("codigo");
+  var prefix = servicioKey.toUpperCase() + "-";
+  var maxSeq = 0;
   for (var i = 1; i < data.length; i++) {
-    if (String(data[i][servicioIdx] || "").trim() === servicioKey) count++;
+    if (String(data[i][servicioIdx] || "").trim() !== servicioKey) continue;
+    var codigo = String(data[i][codigoIdx] || "");
+    if (codigo.indexOf(prefix) === 0) {
+      var n = parseInt(codigo.slice(prefix.length), 10);
+      if (!isNaN(n) && n > maxSeq) maxSeq = n;
+    }
   }
-  var seq = String(count + 1).padStart(3, "0");
-  return servicioKey.toUpperCase() + "-" + seq;
+  return prefix + String(maxSeq + 1).padStart(3, "0");
 }
 
-/** Llamado desde Sidebar.html al enviar el formulario de "Nuevo criterio". */
+/**
+ * Llamado desde Sidebar.html al enviar el formulario de "Nuevo criterio".
+ * Bloqueada con LockService: dos altas casi simultáneas ya no pueden leer el
+ * mismo "siguiente número" antes de que la primera escriba su fila.
+ */
 function agregarCriterio(fields) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_CRITERIOS);
-  var codigo = generarCodigo_(fields.servicio);
-  var hoy = Utilities.formatDate(new Date(), "America/Lima", "yyyy-MM-dd");
+  var lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_CRITERIOS);
+    var codigo = generarCodigo_(fields.servicio);
+    var hoy = Utilities.formatDate(new Date(), "America/Lima", "yyyy-MM-dd");
 
-  var row = CRITERIOS_HEADERS.map(function (key) {
-    if (key === "codigo") return codigo;
-    if (key === "estado") return "Vigente";
-    if (key === "actualizado_el") return hoy;
-    return fields[key] !== undefined ? fields[key] : "";
-  });
+    var row = CRITERIOS_HEADERS.map(function (key) {
+      if (key === "codigo") return codigo;
+      if (key === "estado") return "Vigente";
+      if (key === "actualizado_el") return hoy;
+      return fields[key] !== undefined ? fields[key] : "";
+    });
 
-  sheet.appendRow(row);
-  registrarCambio_("Alta", codigo, "Nuevo criterio agregado desde el panel lateral.");
-  return codigo;
+    sheet.appendRow(row);
+    registrarCambio_("Alta", codigo, "Nuevo criterio agregado desde el panel lateral.");
+    return codigo;
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function promptRetirarCriterio() {
@@ -298,4 +315,41 @@ function clearRangeProtections_(sheet, startRow, numRows) {
     var rEnd = r.getRow() + r.getNumRows() - 1;
     if (r.getRow() <= endRow && rEnd >= startRow) p.remove();
   });
+}
+
+/**
+ * Trigger simple (se activa solo, sin configuración): si alguien edita una
+ * celda de `criterios` directo, en vez de usar el menú Checklist, estampa
+ * actualizado_el y deja rastro en log_cambios — ese flujo antes no quedaba
+ * registrado. No se dispara por cambios hechos desde código (appendRow/
+ * setValue de agregarCriterio/retirarCriterio_), solo por edición manual.
+ * shortcut: en un pegado multi-celda no distingue qué campo cambió por
+ * celda, solo registra "fila editada"; si hace falta ese detalle, pasar a
+ * un trigger instalable y leer rango completo antes/después.
+ */
+function onEdit(e) {
+  if (!e || !e.range) return;
+  var sheet = e.range.getSheet();
+  if (sheet.getName() !== SHEET_CRITERIOS) return;
+
+  var startRow = e.range.getRow();
+  var numRows = e.range.getNumRows();
+  if (startRow < 2) return;
+
+  var codigoIdx = CRITERIOS_HEADERS.indexOf("codigo");
+  var actualizadoIdx = CRITERIOS_HEADERS.indexOf("actualizado_el");
+  var hoy = Utilities.formatDate(new Date(), "America/Lima", "yyyy-MM-dd");
+  var isSingleCell = numRows === 1 && e.range.getNumColumns() === 1;
+  var header = isSingleCell ? CRITERIOS_HEADERS[e.range.getColumn() - 1] : null;
+
+  for (var r = startRow; r < startRow + numRows; r++) {
+    if (r < 2) continue;
+    var codigo = sheet.getRange(r, codigoIdx + 1).getValue();
+    if (!codigo) continue;
+    sheet.getRange(r, actualizadoIdx + 1).setValue(hoy);
+    var detalle = isSingleCell && header
+      ? "Campo '" + header + "': \"" + (e.oldValue !== undefined ? e.oldValue : "") + "\" -> \"" + e.value + "\""
+      : "Celda(s) editada(s) directamente en la fila " + r + ".";
+    registrarCambio_("Edición manual", String(codigo), detalle);
+  }
 }

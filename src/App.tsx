@@ -356,15 +356,21 @@ export default function App() {
         const rows = criteriaData[svc.key] || [];
         const exportData = rows.map((r) => ({
           ID: r.id,
+          Sector: r.sector || "",
+          Servicio: r.servicio || "",
+          Tipología: r.tipologia || "",
           Capa: r.capa,
           "N°": r.n,
           "Ítem de verificación": r.item,
           "Qué debe contener / cómo verificar": r.que,
           "Norma exacta": r.norma,
           "Artículo / sección": r.art,
+          "Enlace a la norma": r.enlace_norma || "",
           Ámbito: r.amb,
           Obligatoriedad: r.obl,
-          Diferencial: r.dif
+          Diferencial: r.dif,
+          Estado: r.estado || "",
+          "Actualizado el": r.actualizado_el || ""
         }));
         const ws = XLSX.utils.json_to_sheet(exportData);
         XLSX.utils.book_append_sheet(wb, ws, svc.label.slice(0, 31));
