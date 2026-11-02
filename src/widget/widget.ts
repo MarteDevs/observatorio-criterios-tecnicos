@@ -86,6 +86,13 @@ class ChecklistExpedientesElement extends HTMLElement {
     });
   }
 
+  // shortcut: WebMCP no está disponible en el widget — el build IIFE no separa
+  // en chunks, así que importarlo aquí volvía a sumar ~3 KB al bundle base
+  // pasando el presupuesto de RNF-06 (<30 KB) para una función que hoy usa
+  // casi nadie. Solo está activa en la página principal (src/App.tsx), sin
+  // presupuesto de tamaño. Si WebMCP madura y se vuelve prioridad real,
+  // reconsiderar con un entry point separado (build en formato "es").
+
   private applySectorFilter() {
     const sectorAttr = this.getAttribute("data-sector");
     if (!sectorAttr) return;

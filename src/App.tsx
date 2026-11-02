@@ -17,6 +17,7 @@ import {
 } from "./data/normalize";
 import { fetchRemoteCriteria, type DataSource } from "./data/remoteCriteria";
 import { fetchRemoteServices, type ServicesSource } from "./data/remoteServices";
+import { registerWebMcpTools } from "./webmcp";
 import {
   Search,
   Filter,
@@ -120,6 +121,12 @@ export default function App() {
   useEffect(() => {
     loadRemoteData();
   }, []);
+
+  // WebMCP (opcional, no-op si el navegador no soporta document.modelContext):
+  // re-registra las herramientas cada vez que cambian los datos o los servicios.
+  useEffect(() => {
+    return registerWebMcpTools(criteriaData, services);
+  }, [criteriaData, services]);
 
   // RF-07: filtrar a un solo sector desde la URL, ej. ?sector=MINSA
   const [sectorFilter, setSectorFilter] = useState<string | null>(null);
