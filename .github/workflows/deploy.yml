@@ -1,11 +1,15 @@
 name: Publicar en GitHub Pages
 
-# Se dispara solo con un push a main. Nadie necesita compilar ni subir
-# archivos a mano: editar el Sheet actualiza el contenido solo (RNF-02);
-# este workflow solo corre cuando cambia el código del repositorio.
+# Push a main: nadie necesita compilar ni subir archivos a mano para
+# cambiar el sitio. La página y el widget siguen leyendo el Sheet en vivo
+# (RNF-02 no depende de este workflow). El "schedule" de abajo es solo para
+# refrescar public/api/v1/*.json (el artefacto estático para consumidores
+# externos sin JavaScript) con una frescura razonable entre pushes.
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: "0 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -28,6 +32,11 @@ jobs:
           bun-version: latest
 
       - run: bun install --frozen-lockfile
+
+      - name: Generar public/api/v1 (criterios.json, servicios.json)
+        run: bun run build:api
+        env:
+          VITE_CRITERIOS_CSV_URL: ${{ secrets.VITE_CRITERIOS_CSV_URL }}
 
       - name: Build de la página principal
         run: bun run build

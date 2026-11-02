@@ -1,0 +1,12 @@
+# Observatorio de Criterios Técnicos
+
+> Matriz de criterios técnico-normativos para la aprobación de expedientes
+> técnicos de inversión pública subnacional en Perú (Escuela de Gestión
+> Pública, Universidad del Pacífico, en coordinación con la DGPMI-MEF).
+> Dataset preliminar: los criterios publicados hoy aún no son la matriz
+> final validada por SECO.
+
+- Página pública (requiere JavaScript): /
+- API de criterios (JSON, sin JavaScript, CC BY 4.0): /api/v1/criterios.json
+- Catálogo de tipologías (JSON): /api/v1/servicios.json
+- Código fuente (MIT): https://github.com/MarteDevs/observatorio-criterios-tecnicos

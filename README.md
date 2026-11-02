@@ -20,7 +20,23 @@ Sitio publicado: https://martedevs.github.io/observatorio-criterios-tecnicos/
 - **Widget embebible** (`src/widget/`): versión sin React, web component
   `<checklist-expedientes>`, <30 KB — se genera aparte con `bun run build:widget`.
 - **Despliegue**: GitHub Pages vía `.github/workflows/deploy.yml`, automático
-  en cada push a `main`.
+  en cada push a `main`, y cada hora por `schedule`.
+
+## API de solo lectura
+
+Para quien no ejecuta JavaScript (buscadores, agentes, integraciones de
+terceros): `scripts/build_api.ts` genera en cada build
+`public/api/v1/criterios.json` y `servicios.json` — mismo origen, CC BY 4.0,
+sin cuotas ni redirección del endpoint de Apps Script. La página y el
+widget no leen de ahí; siguen en vivo, sin cambios.
+
+```
+GET /api/v1/criterios.json   # criterios Vigente, con metadatos de versión/licencia
+GET /api/v1/servicios.json   # catálogo de tipologías
+```
+
+El dataset está marcado `"estado_dataset": "preliminar"` — los criterios
+publicados aún no son la matriz validada por SECO.
 
 Operación completa (transferencia de cuentas, flujo de actualización,
 limitaciones conocidas): [`ENTREGA.md`](ENTREGA.md).

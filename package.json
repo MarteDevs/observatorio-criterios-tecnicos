@@ -10,7 +10,8 @@
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit",
     "export:sheet-seed": "tsx scripts/export_sheet_seed.ts",
-    "build:widget": "vite build --config vite.widget.config.ts"
+    "build:widget": "vite build --config vite.widget.config.ts",
+    "build:api": "bun run scripts/build_api.ts"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
