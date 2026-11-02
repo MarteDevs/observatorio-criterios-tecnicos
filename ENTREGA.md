@@ -33,6 +33,7 @@ Todavía no hay ninguna cuenta institucional. Mientras tanto:
 | Apps Script (panel "Checklist" + endpoint JSON) | Ligado al Sheet de arriba | **No se transfiere solo** — quien reciba el Sheet debe abrir Extensiones > Apps Script y volver a autorizarlo con su propia cuenta |
 | Repositorio de código | [github.com/MarteDevs/observatorio-criterios-tecnicos](https://github.com/MarteDevs/observatorio-criterios-tecnicos), público | Transferir a una organización institucional cuando exista (Settings > Transfer ownership) |
 | Sitio público | **En línea** en GitHub Pages, desplegado automáticamente en cada `git push` a `main` | Ninguna — ya funciona; solo cambia de dueño junto con el repo |
+| Servidor MCP remoto (`mcp-worker/`) | **No desplegado** — solo código, listo | Necesita una cuenta de Cloudflare (4ta cuenta) que nadie ha creado; ver `mcp-worker/README.md`. No bloquea nada de lo demás si nunca se despliega |
 
 ## Cuando exista una cuenta institucional real
 
@@ -115,6 +116,27 @@ Transportes), hay que cargarlos al Sheet real reemplazando o sumando a estos.
 Mientras un lote de datos no esté validado, se puede previsualizar con
 "Cargar Excel local" en la página (no toca el Sheet, solo la sesión del
 navegador) antes de subirlo definitivamente.
+
+## API y consumidores externos
+
+Además de la página y el widget, el sitio publica (generado por
+`scripts/build_api.ts` en cada deploy):
+
+- `api/v1/criterios.json` y `api/v1/servicios.json` — de solo lectura, CC
+  BY 4.0, para quien no ejecute JavaScript (buscadores, agentes, un tercero
+  como expedientecheck.com). Marcado `"estado_dataset": "preliminar"`.
+- `src/webmcp.ts` — si el navegador soporta la API experimental WebMCP
+  (`document.modelContext`, Chrome 149+ en origin trial), la página expone
+  4 herramientas de solo lectura. No activa nada por sí solo en producción:
+  falta registrar el token de origin trial para el dominio publicado
+  (acción de cuenta de Google/Chrome, no de código).
+- `mcp-worker/` — servidor MCP remoto para clientes que no son navegador.
+  Código listo y probado, **no desplegado** (ver tabla de arriba). El
+  propio análisis que lo originó recomendaba confirmar con expedientecheck
+  qué necesita antes de desplegarlo.
+
+Ninguna de estas tres piezas es necesaria para que la página o el widget
+funcionen — son capas adicionales, no reemplazan el flujo en vivo.
 
 ## Ícono del navegador (favicon)
 
